@@ -1,0 +1,30 @@
+[Unit]
+Description=OpenVibe.Help — Answers, support and a way to reach people.
+# Network (sign-in, JWKS) should be up first, but OpenVibe.Help degrades honestly without it: the pages and the API's
+# public routes serve; sign-in and the guarded routes wait for the signing key (see /api/ready).
+After=network.target postgresql.service pgbouncer.service valkey-server.service
+Wants=openvibe-network.service postgresql.service pgbouncer.service valkey-server.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/openvibe.help
+EnvironmentFile=/etc/openvibe/help.env
+Environment=NODE_ENV=production
+Environment=PORT=5020
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env node /opt/openvibe.help/server/index.js
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+# In-flight requests get the 10 s drain.
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# OpenVibe.Help's own database is PostgreSQL on the host's data role; the code tree stays read-only.
+
+[Install]
+WantedBy=multi-user.target
