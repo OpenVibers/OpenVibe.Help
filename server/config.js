@@ -38,6 +38,16 @@ function load(env = process.env) {
         db: { url: env.DATABASE_URL || '', directUrl: env.DATABASE_DIRECT_URL || '', pgliteDir: env.HELP_PGLITE_DIR || '' },
         valkey: { url: env.VALKEY_URL || '', prefix: env.VALKEY_PREFIX || 'ov:help:' },
 
+        // OpenVibe.Search's public query API (GET /api/v1/search?q=&limit=), asked for the "From across OpenVibe"
+        // half of /search. This is the only host /search ever calls: a person's query is a parameter, never a URL.
+        // Answers are cached in this process for cacheMs; a failure degrades the page to the articles alone.
+        search: {
+            url: trim(env.HELP_SEARCH_URL || 'https://search.openvibe.network'),
+            limit: Math.min(20, Math.max(1, int(env.HELP_SEARCH_LIMIT, 8))),
+            timeoutMs: Math.max(200, int(env.HELP_SEARCH_TIMEOUT_MS, 2500)),
+            cacheMs: Math.max(0, int(env.HELP_SEARCH_CACHE_MS, 5 * 60_000)),
+        },
+
         // OpenVibe.Network: SSO (OAuth2 authorization server with PKCE) and its JWKS.
         networkUrl,
         networkInternalUrl: trim(env.OV_NETWORK_INTERNAL_URL || 'http://127.0.0.1:4000'),

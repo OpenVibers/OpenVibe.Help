@@ -20,8 +20,11 @@ const READ = 'help.api.read';
     const rosa = t.network.addUser('rosa');
     const sam = t.network.addUser('sam');
 
-    await check('BUDGETS starts empty: the product declares its own expensive routes', () => {
-        assert.deepStrictEqual(BUDGETS, {});
+    await check('the product\'s own budgets are pinned: opening a ticket and replying', () => {
+        assert.deepStrictEqual(BUDGETS, {
+            'help.ticket.create': { minute: 6, hour: 60 },
+            'help.ticket.message': { minute: 30, hour: 300 },
+        });
     });
 
     await check('a read: 3 a minute per address, then 429 rate_limited with Retry-After; another address passes', async () => {

@@ -13,15 +13,20 @@ const { measure, check, format } = require('openvibe-shared/perf-budget');
 
 // Budgets are set from the numbers measured on 2026-10-08 (the real ones, fresh database), rounded up with about 10%
 // headroom; file counts are the measured counts and external files stay at 0.
+//
+// The CSS budget moved with the product: the home page is now the help centre (a search box, the questions the
+// sites answer, the site grid, the ticket form), so app.css grew by the styles those need — 6.0 KB of app.css
+// against 11.6 KB of the shared showcase.css. Raised 2026-10-08 from 16.5/4.1 to 18.5/4.5 for a measured
+// 17.5/4.3. The HTML budget did NOT move: those pages fit in the skeleton home page's 24.9 KB budget with room.
 const BUDGETS = {
-    htmlRawKB: 27.5,   // measured 24.9 (the home page: hero, features, steps, cta, JSON-LD)
-    htmlBrotliKB: 6.9,   // 6.2
+    htmlRawKB: 27.5,   // measured 25.3 (the home page: hero, search, popular questions, the site grid, contact)
+    htmlBrotliKB: 6.9,   // 6.0
     jsFiles: 5,   // 5 (theme-loader, web-runtime, navbar, footer, boost: openvibe-shared/shell)
     jsRawKB: 264,   // 239.8
     jsBrotliKB: 62.5,   // 56.5
     cssFiles: 2,   // 2 (app.css + the cached /shared/showcase.css)
-    cssRawKB: 16.5,   // 15.0
-    cssBrotliKB: 4.1,   // 3.7
+    cssRawKB: 18.5,   // 17.5
+    cssBrotliKB: 4.5,   // 4.3
     externalFiles: 0,   // 0
 };
 

@@ -45,7 +45,18 @@ function walk(dir, out = []) {
 const rel = (p, dir) => path.relative(dir, p).split(path.sep).join('/');
 const text = (p) => fs.readFileSync(p, 'utf8');
 
+// This file travels into every service the generator makes — and there the placeholders it exercises are already
+// substituted, so scripts/new-service.js, which copies the tree it lives in, can only produce another copy of this
+// service rather than the sample. That is a skip, not a pass (openvibe-shared/test-runner: a skipped file is listed
+// with ○, is not counted as passed, and does not fail the run); it still runs in the skeleton itself, where the
+// placeholders exist.
+const TEMPLATE = fs.readFileSync(path.join(ROOT, 'server', 'config.js'), 'utf8').includes(token('ID'));
+
 (async () => {
+    if (!TEMPLATE) {
+        process.stdout.write("skeleton.test.js: skipped (this tree is already a generated service: the skeleton's placeholders are gone, so the generator cannot rebuild the sample here)\n");
+        return;
+    }
     const base = tmpDir('ov-new-service-');
     const dir = path.join(base, 'openvibe-sample');
     const printed = runGenerator(dir);

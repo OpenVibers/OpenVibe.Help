@@ -4,14 +4,16 @@
  * OpenVibe.Help — Express app factory; server/index.js listens, tests build their own instance with a temp database
  * and a mock Network.
  *
- *   /, /updates                                       the pages (http/pages.js)
- *   /api/v1/*                                         the API (http/api.js)
- *   /auth/*                                           Network SSO with PKCE (auth/sso.js)
- *   /api/health, /api/ready, /release.json, /metrics  (loopback only)
+ *   /, /sites, /sites/:id, /a/:site/:slug, /search     the help centre (http/pages.js)
+ *   /tickets, /tickets/:id, /staff, /updates           support and the update log (http/pages.js)
+ *   /api/v1/*                                          the API (http/api.js)
+ *   /auth/*                                            Network SSO with PKCE (auth/sso.js)
+ *   /api/health, /api/ready, /release.json, /metrics   (loopback only)
  *
- * The product fills this in: its routes in http/api.js, its pages in http/pages.js, its capabilities in
- * http/principal.js and its budgets in http/caller-limits.js. The plumbing here (helmet, SSO, legal pages,
- * static assets, the API mount, the 404 and the error handler) stays.
+ * The pages and the API are the product; the plumbing (helmet, SSO, legal pages, static assets, the API mount, the
+ * 404 and the error handler) is the skeleton's. The help centre's content is generated here, at boot, from
+ * OpenVibe.Contracts (server/catalog.js) — no database, nothing hand-written — and the catalog and the
+ * OpenVibe.Search client go into ctx for the pages, the API and the crawl artifacts to share.
  */
 const path = require('path');
 const express = require('express');
@@ -23,6 +25,8 @@ const cache = require('openvibe-shared/cache-policy');
 
 const configLib = require('./config');
 const { openStore } = require('./db');
+const { createCatalog } = require('./catalog');
+const { createNetworkSearch } = require('./search');
 const { createKeyStore } = require('./auth/keys');
 const { createSso } = require('./auth/sso');
 const { createPrincipal } = require('./http/principal');
@@ -49,7 +53,11 @@ async function createApp(opts = {}) {
     const keys = createKeyStore({ config, fetchImpl, log });
     const sso = createSso({ config, keys, fetchImpl, now: s.now, log });
     const principal = createPrincipal({ config, keys });
-    const ctx = { config, s, keys, sso, principal, log };
+    // The help centre's content is generated at boot from OpenVibe.Contracts (server/catalog.js): no database,
+    // nothing hand-written. The search cache lives in this process for its 5 minutes.
+    const catalog = createCatalog({ now: s.now });
+    const search = createNetworkSearch({ config, fetchImpl, now: s.now, log });
+    const ctx = { config, s, keys, sso, principal, catalog, search, log };
 
     const app = express();
     app.disable('x-powered-by');

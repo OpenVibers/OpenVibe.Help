@@ -1,8 +1,8 @@
 {
-  "stage": "skeleton",
+  "stage": "product",
   "code": true,
   "wave": "W20",
-  "plan": "OpenVibe.Help starts from the OpenVibe service skeleton; the product's own plan is written here when it is",
+  "plan": "OpenVibe.Help: a help centre generated from OpenVibe.Contracts at boot, search over it and over OpenVibe.Search, and support tickets that stay one conversation",
   "runtime": "node 22, express 4, PostgreSQL 18 (openvibe-sdk/db, async) + Valkey 9",
   "port": "5020",
   "domain": "openvibe.help",
@@ -14,32 +14,42 @@
     "openvibe-sdk v0.35.2",
     "openvibe-shared v2.14.0"
   ],
-  "summary": "OpenVibe.Help — Answers, support and a way to reach people. A new OpenVibe service on the shared skeleton, not deployed yet: sign-in with OpenVibe.Network (OAuth 2 + PKCE, httpOnly session cookies), server-rendered pages through the OpenVibe Frame, the /api/v1 mount with per-caller limits, crawl artifacts, PostgreSQL migrations applied at boot, the nginx and systemd deploy files and a test suite on PGlite with a mock Network.",
+  "summary": "The help and support centre for every OpenVibe site. The help centre is generated at boot from openvibe-contracts (every product manifest and every service manifest's site block): one page per site, one page per question, each text quoted verbatim with its manifest named. /search searches those articles with a fixed explainable score and the network through OpenVibe.Search's public API (cached 5 minutes, degrading to the articles alone when it fails). A signed-in person opens a support ticket that stays one conversation — site, subject, message, an optional page URL stored as text and never fetched — sees only their own, and replies; staff by their Network role claim read the queue, filter it and set the state. Tickets live in PostgreSQL (migrations/0002_tickets.sql), writes made with the session cookie must be same-origin, and opening and answering are limited per caller. Sign-in is OpenVibe.Network (OAuth 2 + PKCE), the pages are server-rendered through the OpenVibe Frame and work without JavaScript, and the crawl artifacts cover every site and every question.",
   "works": [
+    "Help articles generated at boot from openvibe-contracts: 45 sites (22 live, 23 coming) and 20 questions across the 3 sites whose manifest carries an faq, quoted verbatim with provenance (manifest path, link back, read time)",
+    "/sites, /sites/:id (pillars as \"what you can do\", the FAQ as anchored articles, links to the site and its /updates) and /a/:site/:slug (one question per page, the question as the title)",
+    "Search: a fixed score over question/answer/site text for the help articles, plus OpenVibe.Search's public API in a second section; a 5-minute in-process cache, and a failure shown as a failure",
+    "Support tickets: create, list your own, one conversation per ticket, reply, staff queue with filters and open|waiting|solved, all in help_tickets and help_messages",
+    "Privacy: another person's ticket is a 404, anonymous is 401, an app token cannot act as a person, and a write with the session cookie must come from openvibe.help",
+    "Bodies are plain text, escaped with line breaks kept, capped at 10 000 characters; a page URL is stored as text and never fetched",
+    "Per-caller limits: help.ticket.create 6 a minute / 60 an hour, help.ticket.message 30 / 300",
+    "The API at /api/v1 with the problem+json error shape: sites, articles, tickets, staff",
+    "Crawl artifacts: a sitemap and llms-full.txt built from one page list (every site, every question), llms.txt listing the sites, JSON-LD for the home page, a site and a question",
     "Sign-in with OpenVibe.Network (PKCE S256, server-side code exchange, httpOnly session cookies)",
-    "Server-rendered pages: the home page and /updates, through the OpenVibe Frame, complete without JavaScript",
-    "Crawl artifacts: robots.txt, sitemap.xml, llms.txt, llms-full.txt and the home page's JSON-LD",
-    "The API mount at /api/v1 with the problem+json error shape, the per-address limits and the per-caller limits",
-    "Capability verification for app, agent and service tokens (audience openvibe.help) and for a person's own token",
     "Truthful readiness (/api/ready: the database is required) and Prometheus metrics on loopback",
-    "PostgreSQL with migrations/NNNN_*.sql (openvibe-sdk/db); PGlite in development",
-    "Deploy files: deploy/nginx/openvibe.help.conf and deploy/systemd/openvibe-help.service",
-    "Tests on a temp PGlite database with an in-process mock of OpenVibe.Network"
+    "Tests: the catalog against the manifests, escaping, search scoring with an OpenVibe.Search stand-in, and the whole ticket lifecycle including limits"
   ],
   "notYet": [
-    "The product itself: its tables and migrations, its capabilities, its routes in server/http/api.js and its pages in server/http/pages.js",
-    "Its service and capability manifests in openvibe-contracts (contracts-service is help)",
-    "A deployment: the service is not registered with OpenVibe.Services nor deployed by OpenVibe.Host"
+    "A deployment: the service is not registered with OpenVibe.Services nor deployed by OpenVibe.Host",
+    "Its own service manifest and capability manifests in openvibe-contracts (contracts-service is help): CAPABILITIES in server/http/principal.js is empty until they exist",
+    "An email side to a ticket: today one conversation on the web, not yet the same thread by email",
+    "A \"Report a problem\" button on every other OpenVibe site (the product manifest's own launch note); a ticket can name a site but no site embeds the form yet",
+    "Answers drawn from the docs, wiki, blog and service status (the product manifest's description): today the articles are the sites' own manifests, and the network half of /search is what covers the rest"
   ],
   "capabilitiesRegistered": false,
   "serviceManifestRegistered": false,
   "deployed": false,
   "placeholderInSites": false,
   "features": [
+    "generated help articles",
+    "search (articles + OpenVibe.Search)",
+    "support tickets",
+    "staff queue",
     "Network sign-in",
     "server-rendered pages",
     "api mount",
     "limits and readiness",
+    "discovery",
     "deploy files"
   ],
   "updated": "2026-10-08"

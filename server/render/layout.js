@@ -22,8 +22,12 @@ const NETWORK_URL = 'https://openvibe.network';
 const SITE_NAME = 'OpenVibe.Help';
 const TAGLINE = 'Answers, support and a way to reach people.';
 const PUBLIC_DIR = path.join(__dirname, '..', '..', 'public');
-// The product's own navigation: one entry per public page it serves.
+// The product's own navigation: one entry per public page it serves. The support queue (/staff) is not here — it
+// is for staff only, and a link in everyone's navbar would be an invitation to a 403. It is linked from /tickets.
 const NAV = [
+    { label: 'Answers', href: '/sites' },
+    { label: 'Search', href: '/search' },
+    { label: 'Your tickets', href: '/tickets' },
     { label: 'What shipped', href: '/updates' },
 ];
 

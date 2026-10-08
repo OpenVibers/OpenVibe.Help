@@ -26,13 +26,21 @@ function caller(req) {
 }
 
 /**
- * The product's expensive routes, each with its numbers per caller (a minute, an hour). A route takes its entry
- * with `limits.budget('<name>')`; an unknown name throws, so a route can never be counted by a budget that was
- * not declared here. The empty object is the skeleton's starting point:
+ * The product's writes, each with its numbers per caller (a minute, an hour). A route takes its entry with
+ * `limits.budget('<name>')`; an unknown name throws, so a route can never be counted by a budget that was not
+ * declared here.
  *
- *   'help.thing.create': { minute: 6, hour: 60 },
+ *   help.ticket.create    a ticket is an email to a person: a handful an hour is plenty, and the first one is
+ *                         the one that matters
+ *   help.ticket.message   replies are cheap but a conversation can be long, so this is the looser number
+ *
+ * Staff use the same routes (their role, not a different budget, is what they get); a support queue run by a
+ * handful of people should never be throttled into silence, which is why the numbers are per caller, not global.
  */
-const BUDGETS = {};
+const BUDGETS = {
+    'help.ticket.create': { minute: 6, hour: 60 },
+    'help.ticket.message': { minute: 30, hour: 300 },
+};
 
 function createCallerLimits({ config, now = () => Date.now(), registry = null, log = console, enabled = true, valkey = null }) {
     const refused = registry
