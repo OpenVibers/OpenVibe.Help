@@ -22,8 +22,18 @@ const WITH_FAQ = [
     const t = await boot();
     const catalog = t.ctx.catalog;
 
-    await check('the catalog is exactly the manifests: every product domain and every service site, once each', () => {
-        const expected = new Set([...PRODUCTS.map((p) => p.domain), ...SERVICE_SITES.map(siteDomain)]);
+    await check('the catalog is exactly the product sites in the manifests: apex domains and live service sites, once each', () => {
+        const live = new Set();
+        for (const m of contracts.services.manifests) {
+            if (!m.exposure || m.exposure.state !== 'live') continue;
+            for (const d of m.domains || []) live.add(d);
+            if (m.site && m.site.tld) live.add(siteDomain(m));
+        }
+        const product = (d) => d.split('.').length === 2 || (SERVICE_SITES.map(siteDomain).includes(d) && live.has(d));
+        const expected = new Set([...PRODUCTS.map((p) => p.domain), ...SERVICE_SITES.map(siteDomain)].filter(product));
+        for (const host of ['admin.openvibe.network', 'auth.openvibe.network', 'api.openvibe.network', 'status.openvibe.network', 'themes.openvibe.network']) {
+            assert.ok(!catalog.sites.some((s) => s.id === host), `${host} is an operational host, not a product`);
+        }
         const got = catalog.sites.map((s) => s.id);
         assert.deepStrictEqual([...new Set(got)].length, got.length, 'a domain appears twice in the catalog');
         assert.deepStrictEqual([...got].sort(), [...expected].sort(), 'the catalog and the manifests disagree');

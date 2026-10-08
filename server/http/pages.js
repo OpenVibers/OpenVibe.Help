@@ -102,11 +102,11 @@ function createPageRoutes(ctx) {
 ${searchForm()}</section>
 <section class="sc-sec" aria-labelledby="h-popular"><h2 id="h-popular">Popular questions</h2>
 <p class="sc-lede">Every line below is a question an OpenVibe product answers about itself in its own manifest.</p>
-<ul class="q-list">${catalog.popular.map((a) => html`<li><a href="${a.path}">${a.question}</a> <span class="muted small">${a.siteName}</span></li>`)}</ul>
+<ul class="q-list">${catalog.popular.map((a) => html`<li><a href="${a.path}">${a.question}</a><span class="q-site">${String(a.siteName).replace(/^OpenVibe\./, '')}</span></li>`)}</ul>
 <p class="small"><a href="/sites">All ${catalog.sites.length} sites and their questions</a></p></section>
 <section class="sc-sec" aria-labelledby="h-sites"><h2 id="h-sites">Browse by site</h2>
 <p class="sc-lede">Live sites first; each name opens that site's page, with its own words and its own questions. <a href="/sites">The full list, with what each one is</a>.</p>
-<ul class="site-grid">${catalog.sites.map((x) => html`<li><a href="/sites/${x.id}">${x.name}</a></li>`)}</ul></section>
+<ul class="site-cards">${catalog.sites.map((x) => html`<li><a class="site-card${x.live ? '' : ' coming'}" href="/sites/${x.id}"><span class="site-card-top"><b>${x.shortName}</b><span class="site-state">${x.live ? 'live' : 'coming'}</span></span><span class="site-card-line">${x.oneLine}</span></a></li>`)}</ul></section>
 <section class="sc-sec" aria-labelledby="h-contact"><h2 id="h-contact">Contact support</h2>
 <p class="sc-lede">Nothing here answered it? Open a ticket: you and the people who run OpenVibe, in one thread.</p>
 ${contactBlock(req)}</section>

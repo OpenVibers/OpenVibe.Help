@@ -168,12 +168,20 @@ function buildSites() {
     for (const m of services) if (m.site) byDomain.set(siteDomain(m), fromService(m, m.exposure ? m.exposure.state : null));
     for (const p of contracts.products.manifests) byDomain.set(p.domain, merge(byDomain.get(p.domain), fromProduct(p)));
 
-    const sites = [...byDomain.values()].map((e) => {
+    // The help centre is about products: a site is an apex domain (openvibe.live, openre.stream) or a live service's own
+    // site on a subdomain (ai.openvibe.services). The network's operational hosts (admin., auth., api., status., themes.,
+    // realtime. on openvibe.network) and moved addresses are not products and stay out of the catalog.
+    const serviceSites = new Set(services.filter((m) => m.site).map(siteDomain));
+    const isProduct = (e) => String(e.domain).split('.').length === 2 || (serviceSites.has(e.domain) && live.has(e.domain));
+
+    const sites = [...byDomain.values()].filter(isProduct).map((e) => {
         const state = live.has(e.domain) ? 'live' : 'coming';
         const manifests = e.manifests || [e.manifest];
         return {
             ...e,
             id: e.domain,
+            // "OpenVibe.Actor" in a list of OpenVibe sites reads as "Actor"; OpenRe.Stream keeps its own name.
+            shortName: String(e.name || e.domain).replace(/^OpenVibe\./, ''),
             state,
             live: state === 'live',
             // A product manifest has no `what` of its own: its tagline is the one line, or the description's first sentence.
@@ -219,8 +227,16 @@ function buildArticles(sites) {
  * not a ranking claim, and the page says where they come from.
  */
 function popularQuestions(sites, articles, limit = 8) {
-    const order = new Map(sites.map((s, i) => [s.domain, i]));
-    return [...articles].sort((a, b) => order.get(a.site) - order.get(b.site)).slice(0, limit);
+    // One question from each site in turn (live sites first), so the list shows the breadth of the network rather than
+    // every question of the first site in the catalog.
+    const bySite = new Map();
+    for (const a of articles) { if (!bySite.has(a.site)) bySite.set(a.site, []); bySite.get(a.site).push(a); }
+    const queues = sites.map((s) => bySite.get(s.domain) || []).filter((q) => q.length);
+    const out = [];
+    for (let round = 0; out.length < limit && queues.some((q) => q.length > round); round++) {
+        for (const q of queues) { if (q[round] && out.length < limit) out.push(q[round]); }
+    }
+    return out;
 }
 
 /** Build the catalog once per process (and per test boot), at `now`. */
