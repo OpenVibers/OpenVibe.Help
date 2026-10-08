@@ -166,6 +166,27 @@ listed with ○ and is not counted as a pass.
   **OpenVibe.Services** before the first deploy. No new environment variable is required to run: `HELP_SEARCH_URL` has
   a default.
 
+## Account export and deletion
+
+A person's account at OpenVibe.Network can be exported and deleted, and every service holding their rows answers its
+part (ADR-033). Help receives `network.account.export_requested` and `network.account.deleted` at
+`POST /internal/events` (loopback only) — the two tables are mapped in
+[server/identity/account-data.js](server/identity/account-data.js), and the boot-time subscriptions are created by
+[server/events-consumer.js](server/events-consumer.js):
+
+- **Exported:** the tickets a person opened (`tickets.json`) and every message they wrote (`messages.json`), pushed to
+  `POST /internal/account-exports/:id/parts` with this service's own token. Nothing here is a secret — Help stores no
+  token, key or credential.
+- **Erased:** the person's own tickets are deleted; the `ON DELETE CASCADE` on `help_messages.ticket_id` takes every
+  message under them — from either side — with them.
+- **Anonymized:** a staff reply the person wrote in someone else's ticket keeps its body — that ticket's owner still
+  has to read their own conversation — and its `author` becomes NULL. (`help_messages.author` is nullable for exactly
+  this reason.) Help then confirms with `POST /internal/account-deletions/:id/confirmations` and the counts.
+
+Environment: `HELP_EVENTS_SECRET` (comma-separated for rotation, 32+ characters each; unset makes the route answer
+503), `HELP_EVENTS_URL` (or `EVENTS_URL`) is where the two subscriptions are created at boot (off when unset), and
+`HELP_EVENTS_ENDPOINT` overrides the loopback endpoint; `HELP_EVENTS_SUBSCRIBE=0` turns the boot-time subscription off.
+
 ## Security (threat notes)
 
 Reporting a vulnerability: [SECURITY.md](SECURITY.md).
@@ -187,6 +208,6 @@ Part of the [OpenVibe network](https://openvibe.network). Built in the open by [
 
 <!-- versions:start -->
 - openvibe-contracts: v0.116.0
-- openvibe-sdk: v0.35.2
+- openvibe-sdk: v0.36.0
 - openvibe-shared: v2.15.0
 <!-- versions:end -->
