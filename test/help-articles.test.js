@@ -99,8 +99,8 @@ const WITH_FAQ = [
 
     await check('a service manifest\'s own site faq is used, not only a product manifest\'s', () => {
         const openre = catalog.byId.get('openre.stream');
-        assert.ok(openre && openre.faq.length === 5, `openre.stream has ${openre ? openre.faq.length : 'no'} questions`);
-        assert.ok((catalog.bySite.get('openre.stream') || []).length === 5, 'no article pages for openre.stream');
+        assert.ok(openre && openre.faq.length === 8, `openre.stream has ${openre ? openre.faq.length : 'no'} questions`);
+        assert.ok((catalog.bySite.get('openre.stream') || []).length === 8, 'an article page per openre.stream question');
     });
 
     await check('the link back to the site and to its /updates is on the site page', async () => {
@@ -135,8 +135,11 @@ const WITH_FAQ = [
     });
 
     await check('/api/v1/articles?q= ranks the articles and names where each came from', async () => {
-        const all = (await t.get('/api/v1/articles')).json();
-        assert.strictEqual(all.count, catalog.articles.length);
+        // A page is 50 articles by default and at most 100 (the catalog passed 50 with contracts 0.126.0).
+        const page = (await t.get('/api/v1/articles')).json();
+        assert.strictEqual(page.count, Math.min(catalog.articles.length, 50));
+        const all = (await t.get('/api/v1/articles?limit=100')).json();
+        assert.strictEqual(all.count, Math.min(catalog.articles.length, 100));
         const hits = (await t.get('/api/v1/articles?q=agent')).json();
         assert.ok(hits.count > 0, 'no hits for "agent"');
         assert.ok(hits.articles.every((a) => a.url.startsWith('/a/')), 'an article without a URL');
