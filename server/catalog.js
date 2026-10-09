@@ -180,7 +180,7 @@ function buildSites() {
         return {
             ...e,
             id: e.domain,
-            // "OpenVibe.Actor" in a list of OpenVibe sites reads as "Actor"; OpenRe.Stream keeps its own name.
+            // "OpenVibe.Actor" in a list of OpenVibe sites reads as "Actor"; OpenRestream keeps its own name.
             shortName: String(e.name || e.domain).replace(/^OpenVibe\./, ''),
             state,
             live: state === 'live',
