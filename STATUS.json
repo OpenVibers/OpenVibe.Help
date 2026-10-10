@@ -9,11 +9,11 @@
   "domain": "openvibe.help",
   "contracts": "openvibe-contracts v0.128.0",
   "sdk": "openvibe-sdk v0.36.0",
-  "shared": "openvibe-shared v2.21.0",
+  "shared": "openvibe-shared v2.21.1",
   "packages": [
     "openvibe-contracts v0.128.0",
     "openvibe-sdk v0.36.0",
-    "openvibe-shared v2.21.0",
+    "openvibe-shared v2.21.1",
     "openvibe-publishing v1.4.0"
   ],
   "summary": "The help and support centre for every OpenVibe site. The help centre is generated at boot from openvibe-contracts (every product manifest and every service manifest's site block): one page per site, one page per question, each text quoted verbatim with its manifest named. /search searches those articles with a fixed explainable score and the network through OpenVibe.Search's public API (cached 5 minutes, degrading to the articles alone when it fails). A signed-in person opens a support ticket that stays one conversation — site, subject, message, an optional page URL stored as text and never fetched — sees only their own, and replies; staff by their Network role claim read the queue, filter it and set the state. Tickets live in PostgreSQL (migrations/0002_tickets.sql), writes made with the session cookie must be same-origin, and opening and answering are limited per caller. Sign-in is OpenVibe.Network (OAuth 2 + PKCE), the pages are server-rendered through the OpenVibe Frame and work without JavaScript, and the crawl artifacts cover every site and every question.",
