@@ -9,6 +9,77 @@
 The help and support centre for every OpenVibe site: the answers each site gives about itself, search over those and
 over the whole network, and a support ticket that stays one conversation.
 
+## Purpose
+
+OpenVibe.Help is the help and support centre for every OpenVibe product site. At boot it builds a catalog of every
+site from the pinned OpenVibe.Contracts manifests, generates one article per manifest FAQ entry, and searches those
+articles alongside OpenVibe.Search's public network index. A signed-in person can also open a support ticket that
+stays one conversation with staff. It is the service behind `openvibe.help` (port 5020, service id `help`, env
+prefix `HELP`).
+
+## Owns
+
+OpenVibe.Help is the authority for support tickets and their conversations, and for the receipts of the
+account-export and account-deletion events it has applied. Its migrations create:
+
+| Table | Holds | Migration |
+|---|---|---|
+| `help_tickets` | a ticket: `tkt_<ULID>` id, requester (`user:usr_…`), site, subject, state `open \| waiting \| solved`, `page_url` (text only), created/updated | `migrations/0002_tickets.sql` |
+| `help_messages` | one message: `msg_<ULID>` id, ticket id (`ON DELETE CASCADE`), author, role `person \| staff`, body, created_at | `migrations/0002_tickets.sql` |
+| `account_data_events` | the export or deletion id applied, its subject, outcome and timestamps | `migrations/0003_account_data.sql` |
+
+`migrations/0001_initial.sql` creates no tables. The catalog and its articles are not stored — they are rebuilt from
+OpenVibe.Contracts at every boot.
+
+## Does not own
+
+OpenVibe.Help uses, but does not own:
+
+- **Identity, sessions and staff roles** — OpenVibe.Network. Help verifies the Network session token (OAuth client
+  `help`, PKCE S256) and its JWKS, and reads the role claim (`admin` | `global_mod`) to decide staff. It stores no
+  accounts and no credentials.
+- **The help text** — OpenVibe.Contracts. The product and service manifests are read-only and quoted verbatim; Help
+  does not write or edit them.
+- **The network search index** — OpenVibe.Search. The "From across OpenVibe" half of `/search` is its public API.
+- **Event delivery** — OpenVibe.Events. Help subscribes to two topics and answers the loopback delivery; it does
+  not run the broker.
+- **Account export and deletion** — OpenVibe.Network (ADR-033). Help answers its part of a Network-initiated export
+  or deletion and confirms it.
+- **The host, database and Valkey** — OpenVibe.Host. Deploy, the PostgreSQL database and roles, and the shared
+  per-caller limit counters are the host's.
+
+## Depends on
+
+Services and packages it calls, with the environment variables that point at them (see [.env.example](.env.example)):
+
+- **OpenVibe.Network** — sign-in, token exchange, refresh and revoke, and the JWKS: `OV_NETWORK_URL`,
+  `OV_NETWORK_INTERNAL_URL`, `OV_NETWORK_ISSUER`, `OV_OAUTH_CLIENT_ID` (`help`), `OV_OAUTH_CLIENT_SECRET`,
+  `OV_OAUTH_REDIRECT_URI`, `OV_SESSION_AUDIENCE`; tokens it accepts are for `HELP_AUDIENCE` (`openvibe.help`).
+- **OpenVibe.Search** — the public query API: `HELP_SEARCH_URL` (default `https://search.openvibe.network`),
+  `HELP_SEARCH_LIMIT`, `HELP_SEARCH_TIMEOUT_MS`, `HELP_SEARCH_CACHE_MS`.
+- **OpenVibe.Events** — where the two account topics are subscribed at boot: `HELP_EVENTS_URL` (or `EVENTS_URL`),
+  `HELP_EVENTS_SECRET`, `HELP_EVENTS_ENDPOINT`, `HELP_EVENTS_SUBSCRIBE=0` to turn it off.
+- **PostgreSQL** — `DATABASE_URL` (through PgBouncer) and `DATABASE_DIRECT_URL` (migrations, owner role); an
+  embedded PGlite database in `HELP_PGLITE_DIR` for development.
+- **Valkey** — shared per-caller limit counters: `VALKEY_URL`, `VALKEY_PREFIX`.
+- **Packages** — `openvibe-contracts` (read at boot; pinned in `package.json`), `openvibe-sdk`, `openvibe-shared`.
+
+## Capabilities
+
+`openvibe-contracts` declares no `help.*` capability, the service manifest's `capabilities` is `[]`, and
+`CAPABILITIES` in [server/http/principal.js](server/http/principal.js) is empty for the same reason: every route is
+a person acting for themself, or staff judged by the Network role claim, so no route is guarded by a capability.
+The capabilities and scopes it uses on other services:
+
+- **OpenVibe.Events** — scope `events.subscription.manage` (audience `openvibe.events`) to create the two boot-time
+  subscriptions.
+- **OpenVibe.Network** — OAuth scope `profile` for sign-in, and a client-credentials token (audience
+  `openvibe.network`) to push account-export parts and deletion confirmations.
+- **Events** — consumed: `network.account.export_requested`, `network.account.deleted`; produced: none.
+- **Not used yet** — `staff.console.access`, the Network staff capability
+  [server/tickets/staff.js](server/tickets/staff.js) would call in place of the role comparison if the Network
+  starts issuing it.
+
 ## What it does
 
 ### 1. Help articles, generated from real content — no database, no hand-written copy
