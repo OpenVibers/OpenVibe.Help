@@ -41,7 +41,7 @@
   ],
   "capabilitiesRegistered": false,
   "serviceManifestRegistered": false,
-  "deployed": false,
+  "deployed": true,
   "placeholderInSites": false,
   "features": [
     "generated help articles",
@@ -55,5 +55,6 @@
     "discovery",
     "deploy files"
   ],
-  "updated": "2026-10-10"
+  "updated": "2026-10-10",
+  "deployment": "openvibe-ovh: unit openvibe-help.service on 127.0.0.1:5020 (git checkout /opt/openvibe.help, env /etc/openvibe/help.env, database ov_help), deployed with `sudo ovhost deploy help`; public at https://openvibe.help since 2026-10-08."
 }
