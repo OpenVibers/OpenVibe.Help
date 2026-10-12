@@ -2,7 +2,7 @@
 
 > Answers, support and a way to reach people.
 
-**Status:** the product is written and tested; it is not deployed yet (see [STATUS.json](STATUS.json)).
+**Status:** the product is written, tested and deployed (see [STATUS.json](STATUS.json)).
 **Domain:** `openvibe.help` · **Port:** 5020 · **Service id:** `help` · **Env prefix:** `HELP`
 **License:** AGPL-3.0 (same as every OpenVibe service).
 
