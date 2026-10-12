@@ -33,14 +33,13 @@
     "Account export and deletion (ADR-033): the tickets a person opened and every message they wrote are exported to OpenVibe.Network on network.account.export_requested; on network.account.deleted their own tickets (and, by cascade, every message under them) are erased while a staff reply they left in someone else's ticket is anonymized, with the counts confirmed back; the two Events topics are subscribed at boot (server/identity/account-data.js)"
   ],
   "notYet": [
-    "Registration with OpenVibe.Services (deployed by OpenVibe.Host since 2026-10-08)",
     "Its own service manifest and capability manifests in openvibe-contracts (contracts-service is help): CAPABILITIES in server/http/principal.js is empty until they exist",
     "An email side to a ticket: today one conversation on the web, not yet the same thread by email",
     "A \"Report a problem\" button on every other OpenVibe site (the product manifest's own launch note); a ticket can name a site but no site embeds the form yet",
     "Answers drawn from the docs, wiki, blog and service status (the product manifest's description): today the articles are the sites' own manifests, and the network half of /search is what covers the rest"
   ],
   "capabilitiesRegistered": false,
-  "serviceManifestRegistered": false,
+  "serviceManifestRegistered": true,
   "deployed": true,
   "placeholderInSites": false,
   "features": [
