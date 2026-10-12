@@ -82,9 +82,10 @@ mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; 
 .site-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 .site-card { display: flex; flex-direction: column; gap: 4px; height: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border, #1f2d47); background: var(--bg-secondary, #101828); color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
 .site-card:hover { border-color: var(--accent, #3b82f6); transform: translateY(-1px); }
-.site-card.coming { opacity: .72; }
+/* Not open yet: a dashed outline and no fill, never faded text (opacity took it below WCAG AA contrast). */
+.site-card.coming { border-style: dashed; background: transparent; }
 .site-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.site-state { font-size: .7rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border-light, #2c3d5c); color: var(--text-muted, #7386a3); }
+.site-state { font-size: .7rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border-light, #2c3d5c); color: var(--text-secondary, #96a7c2); }
 .site-card:not(.coming) .site-state { color: var(--success, #22c55e); border-color: color-mix(in srgb, var(--success, #22c55e) 45%, transparent); }
 .site-card-line { font-size: .86rem; line-height: 1.4; color: var(--text-secondary, #96a7c2); }
 @media (prefers-reduced-motion: reduce) { .site-card { transition: none; } }
