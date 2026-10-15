@@ -57,7 +57,7 @@ function createPageRoutes(ctx) {
     /** Where a page's text came from: the manifests it was read from, and when. */
     const provenance = (p, { compact = false } = {}) => {
         const files = p.manifests || (p.manifest ? [p.manifest] : []);
-        return html`<p class="prov small muted">Generated from <a href="${p.url}" rel="noopener nofollow">${p.source}</a>${files.length ? html` · ${files.map((f) => html`<code>${f}</code>`)}` : ''}${compact ? '' : html` · read ${time(catalog.generatedAt)}`}</p>`;
+        return html`<p class="prov small muted">Generated from <a href="${p.url}" rel="noopener nofollow">${p.source || p.name}</a>${files.length ? html` · ${files.map((f) => html`<code>${f}</code>`)}` : ''}${compact ? '' : html` · read ${time(catalog.generatedAt)}`}</p>`;
     };
 
     const signInPrompt = (what, next) => html`<div class="notice">${what} <a href="/auth/login?next=${encodeURIComponent(next)}">Sign in with OpenVibe</a>.</div>`;

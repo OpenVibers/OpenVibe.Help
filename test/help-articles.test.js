@@ -109,6 +109,15 @@ const WITH_FAQ = [
         assert.ok(r.text.includes('href="https://openvibe.actor/updates"'), 'no link to its /updates');
     });
 
+    await check('every provenance line names its source: no empty link (axe link-name on /sites, 2026-10-15)', async () => {
+        for (const path of ['/sites', '/sites/openvibe.actor']) {
+            const r = await t.get(path);
+            const links = [...r.text.matchAll(/Generated from <a [^>]*>([^<]*)<\/a>/g)].map((m) => m[1]);
+            assert.ok(links.length, `${path} has a provenance line`);
+            assert.ok(links.every((x) => x.trim()), `${path} has an empty provenance link`);
+        }
+    });
+
     await check('a site the catalog does not know is a 404 page, and the URL it was asked for is escaped', async () => {
         const r = await t.get('/sites/nope');
         assert.strictEqual(r.status, 404);
