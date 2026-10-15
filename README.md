@@ -27,6 +27,7 @@ account-export and account-deletion events it has applied. Its migrations create
 | `help_tickets` | a ticket: `tkt_<ULID>` id, requester (`user:usr_…`), site, subject, state `open \| waiting \| solved`, `page_url` (text only), created/updated | `migrations/0002_tickets.sql` |
 | `help_messages` | one message: `msg_<ULID>` id, ticket id (`ON DELETE CASCADE`), author, role `person \| staff`, body, created_at | `migrations/0002_tickets.sql` |
 | `account_data_events` | the export or deletion id applied, its subject, outcome and timestamps | `migrations/0003_account_data.sql` |
+| `telemetry_samples` | request telemetry: one `http.request` sample a minute per route template, method and status class (never a raw URL), plus the active-requests, p95 latency and event-loop-lag gauges (openvibe-sdk 0.46, `platform.telemetry-sample@1`); `/shared`, static assets, health, readiness and `/metrics` are not counted; `server/app.js` builds the collector, `server/index.js` flushes it every minute and deletes rows older than 14 days daily | `migrations/0005_telemetry.sql` |
 
 `migrations/0001_initial.sql` creates no tables. The catalog and its articles are not stored — they are rebuilt from
 OpenVibe.Contracts at every boot.
