@@ -62,6 +62,10 @@ const WITH_FAQ = [
             assert.ok(r.text.includes(site.name), `${site.id}: the name is not on the page`);
             if (site.oneLine) assert.ok(r.text.includes(esc(site.oneLine.slice(0, 40))), `${site.id}: the one line is not on the page`);
             assert.ok(r.text.includes('OpenVibe.Contracts'), `${site.id}: no provenance`);
+            // A site not serving yet promises nothing as working: its pillars are what it will do, and there is no
+            // "What shipped" link to an address that does not serve.
+            if (site.pillars.length) assert.ok(r.text.includes(site.state === 'live' ? 'What you can do' : 'What it will do'), `${site.id}: pillars heading`);
+            assert.strictEqual(r.text.includes(`What shipped on ${esc(site.name)}`), site.state === 'live', `${site.id}: What shipped link only when live`);
         }
     });
 
