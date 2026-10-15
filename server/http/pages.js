@@ -162,10 +162,10 @@ ${site.description ? textBlock(site.description) : ''}
 <p class="site-links">${site.state === 'live'
         ? html`<a class="sc-btn sc-primary" href="${site.url}" rel="noopener nofollow">Open ${site.domain}</a>`
         : html`<span class="muted">Not serving yet — ${site.url} is its address.</span>`}
-<a class="sc-btn" href="${site.updatesUrl}" rel="noopener nofollow">What shipped on ${site.name}</a></p>
+${site.state === 'live' ? html`<a class="sc-btn" href="${site.updatesUrl}" rel="noopener nofollow">What shipped on ${site.name}</a>` : ''}</p>
 ${provenance(site.provenance)}
 
-${site.pillars.length ? html`<section class="sc-sec" aria-labelledby="h-pillars"><h2 id="h-pillars">What you can do</h2>
+${site.pillars.length ? html`<section class="sc-sec" aria-labelledby="h-pillars"><h2 id="h-pillars">${site.state === 'live' ? 'What you can do' : 'What it will do'}</h2>
 <ul class="pillars">${site.pillars.map((p) => html`<li><b>${p.title}</b>${p.text ? html` <span class="muted">${p.text}</span>` : ''}</li>`)}</ul></section>` : ''}
 
 <section class="sc-sec" aria-labelledby="h-faq"><h2 id="h-faq">Questions</h2>
