@@ -149,7 +149,9 @@ ${group('coming', 'Coming', 'Registered in the catalog, not serving yet, or serv
         const faqPairs = articles.map((a) => ({ q: a.question, a: a.answer }));
         page(req, res, {
             index: true, cache: PUBLIC_CACHE,
-            title: site.name,
+            // "Help with Search", not "Search": the bare name of the OpenVibe.Search page read exactly like Help's own
+            // search page in titles and results (2026-10-17).
+            title: `Help with ${site.name}`,
             description: truncate(site.oneLine || site.description, 160),
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Sites', href: '/sites' }, { label: site.name }],
             jsonLd: [
