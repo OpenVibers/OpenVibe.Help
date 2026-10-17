@@ -74,7 +74,7 @@ mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; 
 .state-form label.radio { margin-right: 16px; }
 
 /* ── Home: popular questions and the site cards ── */
-.q-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.q-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); }
 .q-list li { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border, #1f2d47); background: var(--bg-card, #131c2e); }
 .q-list li a { font-weight: 600; text-decoration: none; color: var(--text-primary, #e6edf7); }
 .q-list li a:hover { color: var(--accent-light, #60a5fa); }
