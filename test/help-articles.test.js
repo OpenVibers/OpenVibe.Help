@@ -111,6 +111,7 @@ const WITH_FAQ = [
         const r = await t.get('/sites/openvibe.actor');
         assert.ok(r.text.includes('href="https://openvibe.actor"'), 'no link to the site itself');
         assert.ok(r.text.includes('href="https://openvibe.actor/updates"'), 'no link to its /updates');
+        assert.match(r.text, /<title>Help with [^<]+ · OpenVibe\.Help<\/title>/, 'a site page is titled as its help, not by the bare name');
     });
 
     await check('every provenance line names its source: no empty link (axe link-name on /sites, 2026-10-15)', async () => {
