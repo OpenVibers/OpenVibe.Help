@@ -30,7 +30,9 @@ const WITH_FAQ = [
             if (m.site && m.site.tld) live.add(siteDomain(m));
         }
         const product = (d) => d.split('.').length === 2 || (SERVICE_SITES.map(siteDomain).includes(d) && live.has(d));
-        const expected = new Set([...PRODUCTS.map((p) => p.domain), ...SERVICE_SITES.map(siteDomain)].filter(product));
+        // A closed, moved or status address (a product manifest's kind) is not a site of its own.
+        const elsewhere = new Set(PRODUCTS.filter((p) => p.kind).map((p) => p.domain));
+        const expected = new Set([...PRODUCTS.map((p) => p.domain), ...SERVICE_SITES.map(siteDomain)].filter((d) => product(d) && !elsewhere.has(d)));
         for (const host of ['admin.openvibe.network', 'auth.openvibe.network', 'api.openvibe.network', 'status.openvibe.network', 'themes.openvibe.network']) {
             assert.ok(!catalog.sites.some((s) => s.id === host), `${host} is an operational host, not a product`);
         }

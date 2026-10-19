@@ -170,9 +170,10 @@ function buildSites() {
 
     // The help centre is about products: a site is an apex domain (openvibe.live, openre.stream) or a live service's own
     // site on a subdomain (ai.openvibe.services). The network's operational hosts (admin., auth., api., status., themes.,
-    // realtime. on openvibe.network) and moved addresses are not products and stay out of the catalog.
+    // realtime. on openvibe.network) and moved addresses are not products and stay out of the catalog. Neither is an
+    // address a product manifest marks closed, moved or status (openvibe.website opens OpenVibe.Space).
     const serviceSites = new Set(services.filter((m) => m.site).map(siteDomain));
-    const isProduct = (e) => String(e.domain).split('.').length === 2 || (serviceSites.has(e.domain) && live.has(e.domain));
+    const isProduct = (e) => !e.kind && (String(e.domain).split('.').length === 2 || (serviceSites.has(e.domain) && live.has(e.domain)));
 
     const sites = [...byDomain.values()].filter(isProduct).map((e) => {
         const state = live.has(e.domain) ? 'live' : 'coming';
