@@ -7,11 +7,11 @@
   "runtime": "node 22, express 4, PostgreSQL 18 (openvibe-sdk/db, async) + Valkey 9",
   "port": "5020",
   "domain": "openvibe.help",
-  "contracts": "openvibe-contracts v0.205.1",
+  "contracts": "openvibe-contracts v0.205.2",
   "sdk": "openvibe-sdk v0.50.1",
   "shared": "openvibe-shared v4.4.0",
   "packages": [
-    "openvibe-contracts v0.205.1",
+    "openvibe-contracts v0.205.2",
     "openvibe-sdk v0.50.1",
     "openvibe-shared v4.4.0",
     "openvibe-publishing v1.4.0"
@@ -55,5 +55,5 @@
     "deploy files"
   ],
   "deployment": "openvibe-ovh: unit openvibe-help.service on 127.0.0.1:5020 (git checkout /opt/openvibe.help, env /etc/openvibe/help.env, database ov_help), deployed with `sudo ovhost deploy help`; public at https://openvibe.help since 2026-10-08.",
-  "updated": "2026-10-18"
+  "updated": "2026-10-19"
 }
