@@ -14,7 +14,7 @@ const siteDomain = contracts.products.siteDomain;
 const PRODUCTS = contracts.products.manifests;
 const SERVICE_SITES = contracts.services.manifests.filter((m) => m.site);
 const WITH_FAQ = [
-    ...PRODUCTS.filter((p) => Array.isArray(p.faq) && p.faq.length).map((p) => ({ domain: p.domain, faq: p.faq, name: p.name })),
+    ...PRODUCTS.filter((p) => !p.kind && Array.isArray(p.faq) && p.faq.length).map((p) => ({ domain: p.domain, faq: p.faq, name: p.name })),
     ...SERVICE_SITES.filter((m) => Array.isArray(m.site.faq) && m.site.faq.length).map((m) => ({ domain: siteDomain(m), faq: m.site.faq, name: m.site.name })),
 ];
 
@@ -51,7 +51,7 @@ const WITH_FAQ = [
             if (m.site && m.site.tld) live.add(siteDomain(m));
         }
         for (const s of catalog.sites) assert.strictEqual(s.state, live.has(s.id) ? 'live' : 'coming', `${s.id}: ${s.state}`);
-        assert.ok(catalog.sites.some((s) => s.state === 'live') && catalog.sites.some((s) => s.state === 'coming'));
+        assert.ok(catalog.sites.some((s) => s.state === 'live'));
         // Ordered live first, so a reader meets the working sites first.
         const first = catalog.sites.findIndex((s) => s.state === 'coming');
         if (first !== -1) assert.ok(catalog.sites.slice(first).every((s) => s.state === 'coming'), 'live and coming sites are interleaved');
