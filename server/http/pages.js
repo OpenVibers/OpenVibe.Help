@@ -89,7 +89,7 @@ function createPageRoutes(ctx) {
             actions: signedIn(req)
                 ? [{ label: 'Your tickets', href: '/tickets' }, { label: 'Open a ticket', href: '/tickets/new', primary: true }]
                 : [{ label: 'Search the answers', href: '#search', primary: true }, { label: 'Sign in to open a ticket', href: '/auth/login?next=%2Ftickets%2Fnew' }],
-            note: `Open source (AGPL-3.0). ${catalog.sites.length} sites in the catalog: ${live.length} live, ${catalog.sites.length - live.length} still coming.`,
+            note: `Open source (AGPL-3.0). ${catalog.sites.length} sites in the catalog${live.length === catalog.sites.length ? ', every one live' : `: ${live.length} live, ${catalog.sites.length - live.length} still coming`}.`,
         });
         page(req, res, {
             index: true, cache: signedIn(req) ? null : PUBLIC_CACHE,
@@ -132,7 +132,7 @@ ${raw(showcase.cta({ title: 'What shipped on OpenVibe.Help', text: 'The update l
                 seo.jsonLd.itemList('OpenVibe sites', catalog.sites.map((x) => ({ name: x.name, url: `${base()}/sites/${x.id}`, description: x.oneLine })), { url: `${base()}/sites` }),
             ],
             body: html`<h1>Every OpenVibe site</h1>
-<p class="sc-lede">${catalog.sites.length} addresses, ${catalog.sites.filter((x) => x.live).length} of them live. The state is the service manifest's own <code>exposure.state</code>: a site is live when a service exposes it live. Everything else on this page is that site's manifest, word for word.</p>
+<p class="sc-lede">${catalog.sites.length} addresses, ${catalog.sites.every((x) => x.live) ? 'every one live' : `${catalog.sites.filter((x) => x.live).length} of them live`}. The state is the service manifest's own <code>exposure.state</code>: a site is live when a service exposes it live. Everything else on this page is that site's manifest, word for word.</p>
 ${provenance(catalog.source)}
 ${group('live', 'Live', 'These answer today.')}
 ${group('coming', 'Coming', 'Registered in the catalog, not serving yet, or serving something else for now.')}`,
