@@ -23,10 +23,10 @@ table { border-collapse: collapse; width: 100%; font-size: .92rem; }
 th, td { text-align: left; vertical-align: top; padding: 7px 9px; border-bottom: 1px solid var(--border, #1f2d47); }
 th { color: var(--text-secondary, #96a7c2); font-weight: 600; }
 .badge { display: inline-block; font-size: .75rem; padding: 0 8px; border-radius: 999px; border: 1px solid var(--border-light, #2c3d5c); white-space: nowrap; line-height: 1.6; }
-.badge.ok { border-color: var(--success, #22c55e); color: var(--success, #22c55e); }
-.badge.info { border-color: var(--info, #38bdf8); color: var(--info, #38bdf8); }
-.badge.warn { border-color: var(--warning, #f59e0b); color: var(--warning, #f59e0b); }
-.badge.bad { border-color: var(--error, #ef4444); color: var(--error, #ef4444); }
+.badge.ok { border-color: var(--success, #22c55e); color: var(--success-text, var(--success, #22c55e)); }
+.badge.info { border-color: var(--info, #38bdf8); color: var(--info-text, var(--info, #38bdf8)); }
+.badge.warn { border-color: var(--warning, #f59e0b); color: var(--warning-text, var(--warning, #f59e0b)); }
+.badge.bad { border-color: var(--error, #ef4444); color: var(--error-text, var(--error, #ef4444)); }
 .notice { border-left: 3px solid var(--info, #38bdf8); padding: 8px 12px; margin: 12px 0; background: var(--bg-card, #131c2e); border-radius: 0 8px 8px 0; }
 .notice.ok { border-left-color: var(--success, #22c55e); }
 .notice.warn { border-left-color: var(--warning, #f59e0b); }
@@ -86,7 +86,7 @@ mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; 
 .site-card.coming { border-style: dashed; background: transparent; }
 .site-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .site-state { font-size: .7rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border-light, #2c3d5c); color: var(--text-secondary, #96a7c2); }
-.site-card:not(.coming) .site-state { color: var(--success, #22c55e); border-color: color-mix(in srgb, var(--success, #22c55e) 45%, transparent); }
+.site-card:not(.coming) .site-state { color: var(--success-text, var(--success, #22c55e)); border-color: color-mix(in srgb, var(--success, #22c55e) 45%, transparent); }
 .site-card-line { font-size: .86rem; line-height: 1.4; color: var(--text-secondary, #96a7c2); }
 @media (prefers-reduced-motion: reduce) { .site-card { transition: none; } }
 
