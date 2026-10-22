@@ -227,7 +227,7 @@ function buildArticles(sites) {
  * The questions the home page shows: real ones, live sites first, in catalog order. `limit` is a display choice,
  * not a ranking claim, and the page says where they come from.
  */
-function popularQuestions(sites, articles, limit = 8) {
+function popularQuestions(sites, articles, limit = 12) {
     // One question from each site in turn (live sites first), so the list shows the breadth of the network rather than
     // every question of the first site in the catalog.
     const bySite = new Map();

@@ -42,7 +42,16 @@ const BOOST = /<script src="\/shared\/boost\.js\?v=[0-9a-f]{12}" data-main="#mai
         assert.ok(head.includes('<link rel="canonical" href="https://openvibe.help/">'), 'canonical');
         assert.ok(head.includes('<meta name="robots" content="index, follow">'), 'robots');
         const ld = [...head.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1])['@type']);
-        assert.deepStrictEqual(ld, ['WebSite', 'WebApplication', 'WebPage'], 'the home JSON-LD');
+        assert.deepStrictEqual(ld, ['WebSite', 'WebApplication', 'WebPage', 'FAQPage'], 'the home JSON-LD: the site, the app, the page and the questions it shows');
+        const faq = [...head.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1])).find((j) => j['@type'] === 'FAQPage');
+        assert.ok(faq.mainEntity.length >= 8, 'a dozen questions, one per site in turn');
+        const page = r.text.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+        for (const q of faq.mainEntity) {
+            assert.ok(page.includes(`<span>${q.name}</span>`), `the page shows "${q.name}"`);
+            assert.ok(page.includes(q.acceptedAnswer.text), `and its answer, verbatim`);
+        }
+        assert.match(r.text, /<dl class="help-stats">[\s\S]*?answers<\/dt>/, 'the figures beside the hero');
+        assert.match(r.text, /class="site-card-count">\d+ answers?</, 'each site card counts its answers');
         for (const tag of ['<meta property="og:title"', 'data-ov-icon="help"', '/css/app.css?v=', '/shared/theme-loader.js', '/shared/navbar.js', '/shared/footer.js', '<meta name="referrer"']) {
             assert.ok(head.includes(tag), `head has ${tag}`);
         }

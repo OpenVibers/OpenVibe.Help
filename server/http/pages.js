@@ -79,8 +79,18 @@ function createPageRoutes(ctx) {
 <p><a class="sc-btn sc-primary" href="/tickets/new">Open a ticket</a> <a class="sc-btn" href="/tickets">Your tickets</a></p></div>`;
     }
 
-    r.get('/', (req, res) => {
+    r.get('/', async (req, res) => {
         const live = catalog.sites.filter((x) => x.live);
+        // Real figures only: the catalog's own counts, and tickets solved once there are any.
+        const answersBySite = new Map();
+        for (const a of catalog.articles) answersBySite.set(a.site, (answersBySite.get(a.site) || 0) + 1);
+        const features = catalog.sites.reduce((n, x) => n + ((x.pillars && x.pillars.length) || 0), 0);
+        let solved = 0;
+        try { solved = (await store.staffCounts(s)).solved; } catch { /* the figure is left out, never guessed */ }
+        const n = (v) => Number(v).toLocaleString('en-US');
+        const stats = [[`${n(live.length)} sites`, 'live, every one with its own page here'], [`${n(catalog.articles.length)} answers`, 'each in the site\'s own words, linked back']];
+        if (features) stats.push([`${n(features)} features`, 'described by the sites that run them']);
+        if (solved) stats.push([`${n(solved)} tickets`, 'solved by the people who run OpenVibe']);
         const hero = showcase.hero({
             eyebrow: `${SITE_NAME} · ${TAGLINE}`,
             title: 'How can we help?',
@@ -90,10 +100,13 @@ function createPageRoutes(ctx) {
                 ? [{ label: 'Your tickets', href: '/tickets' }, { label: 'Open a ticket', href: '/tickets/new', primary: true }]
                 : [{ label: 'Search the answers', href: '#search', primary: true }, { label: 'Sign in to open a ticket', href: '/auth/login?next=%2Ftickets%2Fnew' }],
             note: `Open source (AGPL-3.0). ${catalog.sites.length} sites in the catalog${live.length === catalog.sites.length ? ', every one live' : `: ${live.length} live, ${catalog.sites.length - live.length} still coming`}.`,
+            html: `<dl class="help-stats">${stats.map(([dt, dd]) => `<div><dt>${dt}</dt><dd>${dd}</dd></div>`).join('')}</dl>`,
         });
+        // The questions shown with their answers are FAQPage data too: the same words, verbatim from the manifests.
+        const faqLd = catalog.popular.length ? { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: catalog.popular.map((a) => ({ '@type': 'Question', name: a.question, acceptedAnswer: { '@type': 'Answer', text: a.answer } })) } : null;
         page(req, res, {
             index: true, cache: signedIn(req) ? null : PUBLIC_CACHE,
-            jsonLd: homeJsonLd(config),
+            jsonLd: faqLd ? [...homeJsonLd(config), faqLd] : homeJsonLd(config),
             description: `Search the answers of every OpenVibe site, browse them one by one, or open a support ticket that stays one conversation.`,
             styles: [showcase.STYLESHEET],
             body: html`${raw(hero)}
@@ -101,12 +114,12 @@ function createPageRoutes(ctx) {
 <p class="sc-lede">One box over every site's answers, and over the whole OpenVibe network.</p>
 ${searchForm()}</section>
 <section class="sc-sec" aria-labelledby="h-popular"><h2 id="h-popular">Popular questions</h2>
-<p class="sc-lede">Every line below is a question an OpenVibe product answers about itself in its own manifest.</p>
-<ul class="q-list">${catalog.popular.map((a) => html`<li><a href="${a.path}">${a.question}</a><span class="q-site">${String(a.siteName).replace(/^OpenVibe\./, '')}</span></li>`)}</ul>
+<p class="sc-lede">One question from each site in turn, answered the way the site answers it in its own manifest.</p>
+<div class="q-faq">${catalog.popular.map((a) => html`<details><summary><span>${a.question}</span><span class="q-site">${String(a.siteName).replace(/^OpenVibe\./, '')}</span></summary><p>${a.answer}</p><p class="small"><a href="${a.path}">The answer's own page</a> · <a href="/sites/${a.site}">Every ${String(a.siteName).replace(/^OpenVibe\./, '')} question</a></p></details>`)}</div>
 <p class="small"><a href="/sites">All ${catalog.sites.length} sites and their questions</a></p></section>
 <section class="sc-sec" aria-labelledby="h-sites"><h2 id="h-sites">Browse by site</h2>
 <p class="sc-lede">Live sites first; each name opens that site's page, with its own words and its own questions. <a href="/sites">The full list, with what each one is</a>.</p>
-<ul class="site-cards">${catalog.sites.map((x) => html`<li><a class="site-card${x.live ? '' : ' coming'}" href="/sites/${x.id}"><span class="site-card-top"><b>${x.shortName}</b><span class="site-state">${x.live ? 'live' : 'coming'}</span></span><span class="site-card-line">${x.oneLine}</span></a></li>`)}</ul></section>
+<ul class="site-cards">${catalog.sites.map((x) => html`<li><a class="site-card${x.live ? '' : ' coming'}" href="/sites/${x.id}"><span class="site-card-top"><b>${x.shortName}</b><span class="site-state">${x.live ? 'live' : 'coming'}</span></span><span class="site-card-line">${x.oneLine}</span>${answersBySite.get(x.domain) ? html`<span class="site-card-count">${String(answersBySite.get(x.domain))} ${answersBySite.get(x.domain) === 1 ? 'answer' : 'answers'}</span>` : ''}</a></li>`)}</ul></section>
 <section class="sc-sec" aria-labelledby="h-contact"><h2 id="h-contact">Contact support</h2>
 <p class="sc-lede">Nothing here answered it? Open a ticket: you and the people who run OpenVibe, in one thread.</p>
 ${contactBlock(req)}</section>
