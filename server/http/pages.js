@@ -328,10 +328,20 @@ ${problem ? notice(problem, 'warn') : ''}
 <p><button class="sc-btn sc-primary" type="submit">Open the ticket</button> <a class="sc-btn" href="/tickets">Your tickets</a></p>
 </form>`;
 
+    // "Report a problem" in every site's footer (openvibe-shared footer.js) opens /tickets/new?site=<domain>&page=<url>:
+    // the form starts with that site and page. A site Help does not know, or a page that is not an http(s) address of
+    // at most 500 characters, is left blank; the page is stored as text and never fetched, as when typed.
+    const prefillOf = (q) => {
+        const site = String(q.site || '').toLowerCase().replace(/^www\./, '');
+        const pageUrl = typeof q.page === 'string' && q.page.length <= tickets.LIMITS.pageUrl ? tickets.pageLink(q.page) : null;
+        return { site: catalog.byId.has(site) ? site : '', pageUrl: pageUrl || '' };
+    };
     r.get('/tickets/new', (req, res) => {
+        const pre = prefillOf(req.query);
+        const back = `/tickets/new${pre.site || pre.pageUrl ? `?${new URLSearchParams({ ...(pre.site ? { site: pre.site } : {}), ...(pre.pageUrl ? { page: pre.pageUrl } : {}) })}` : ''}`;
         if (!signedIn(req)) return page(req, res, {
             title: 'Open a ticket', crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
-            body: html`<h1>Open a ticket</h1>${signInPrompt('A ticket belongs to your OpenVibe account, so you can see and answer it later.', '/tickets/new')}`,
+            body: html`<h1>Open a ticket</h1>${signInPrompt('A ticket belongs to your OpenVibe account, so you can see and answer it later.', back)}`,
         }, 401);
         page(req, res, {
             title: 'Open a ticket',
@@ -339,7 +349,7 @@ ${problem ? notice(problem, 'warn') : ''}
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
             body: html`<h1>Open a ticket</h1>
 <p class="sc-lede">One conversation with the people who run OpenVibe. You will see it under <a href="/tickets">your tickets</a> and can reply there.</p>
-${ticketForm()}`,
+${ticketForm({ values: pre })}`,
         });
     });
 

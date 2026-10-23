@@ -186,6 +186,23 @@ const SUBJECT = 'Nothing happens when I press Go Live';
         assert.ok(bad.text.includes('<select id="site" name="site"'), 'the form is not shown again');
     });
 
+    await check('"Report a problem" from a site\'s footer starts the form with that site and page; anything else is left blank', async () => {
+        const page = 'https://openvibe.live/@kim?tab=vods';
+        const form = await t.get(`/tickets/new?${new URLSearchParams({ site: 'www.openvibe.live', page })}`, { as: kim });
+        assert.strictEqual(form.status, 200);
+        assert.ok(form.text.includes('<option value="openvibe.live" selected>'), 'the site is not chosen');
+        assert.ok(form.text.includes(`value="${page.replace('&', '&amp;')}"`) || form.text.includes(`value="${page}"`), 'the page is not filled in');
+        const odd = await t.get(`/tickets/new?${new URLSearchParams({ site: 'evil.example', page: 'javascript:alert(1)' })}`, { as: kim });
+        assert.ok(!odd.text.includes(' selected>') || !odd.text.includes('evil.example'), 'an unknown site is chosen');
+        assert.ok(!odd.text.includes('javascript:alert'), 'a non-http page is filled in');
+        const long = await t.get(`/tickets/new?${new URLSearchParams({ page: `https://openvibe.live/${'x'.repeat(600)}` })}`, { as: kim });
+        assert.ok(long.text.includes('name="page_url" type="text" maxlength="500" value=""'), 'a page over 500 characters is filled in');
+        // Signed out, the sign-in link comes back to the same prefilled form.
+        const out = await t.get(`/tickets/new?${new URLSearchParams({ site: 'openvibe.live', page })}`);
+        assert.strictEqual(out.status, 401);
+        assert.ok(out.text.includes(encodeURIComponent(`/tickets/new?${new URLSearchParams({ site: 'openvibe.live', page })}`)), 'sign-in loses the site and page');
+    });
+
     await check('a reply from the page goes back to the ticket, and only from this site', async () => {
         const r = await t.get(`/tickets/${id}`, { as: kim, form: { message: 'Still happening today.' }, headers: SAME });
         assert.strictEqual(r.status, 303);
