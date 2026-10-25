@@ -52,7 +52,7 @@ button.sc-btn.sc-primary { border: 0; }
 .q-list, .site-list, .results, .ticket-list, .pillars, .conversation { list-style: none; padding: 0; margin: 12px 0; }
 .q-list li, .site-list li, .results li, .ticket-list li { padding: 7px 0; border-bottom: 1px solid var(--border, #1f2d47); }
 .site-list li .muted, .ticket-list li .muted { margin-left: 6px; }
-.site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 6px 16px; list-style: none; padding: 0; margin: 12px 0; }
+.site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr)); gap: 6px 16px; list-style: none; padding: 0; margin: 12px 0; }
 .results li p { margin: 2px 0; }
 .results.net li { border-bottom-style: dotted; }
 mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; }
