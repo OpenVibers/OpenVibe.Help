@@ -23,7 +23,7 @@ const BUDGETS = {
     htmlBrotliKB: 10.7,   // 9.7 on 2026-10-22 (answers inline); 8.3 with 40 sites (2026-10-15); 7.3
     jsFiles: 5,   // 5 (theme-loader, web-runtime, navbar, footer, boost: openvibe-shared/shell)
     jsRawKB: 264,   // 239.8
-    jsBrotliKB: 62.5,   // 56.5
+    jsBrotliKB: 67,   // 65.3 Shared 4.12.0: the light/dark switch, the seasonal mark and the theme pairs; 56.5
     cssFiles: 2,   // 2 (app.css + the cached /shared/showcase.css)
     cssRawKB: 21.5,   // 19.3
     cssBrotliKB: 5.2,   // 4.6
