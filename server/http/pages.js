@@ -123,6 +123,7 @@ ${searchForm()}</section>
 <section class="sc-sec" aria-labelledby="h-contact"><h2 id="h-contact">Contact support</h2>
 <p class="sc-lede">Nothing here answered it? Open a ticket: you and the people who run OpenVibe, in one thread.</p>
 ${contactBlock(req)}</section>
+${raw(showcase.network({ service: 'help' }))}
 ${raw(showcase.cta({ title: 'What shipped on OpenVibe.Help', text: 'The update log is the network changelog, filtered to this service.', actions: [{ label: 'The update log', href: '/updates' }, { label: 'The API', href: '/api/v1/sites' }] }))}`,
         });
     });
