@@ -42,7 +42,7 @@ const BOOST = /<script src="\/shared\/boost\.js\?v=[0-9a-f]{12}" data-main="#mai
         assert.ok(head.includes('<link rel="canonical" href="https://openvibe.help/">'), 'canonical');
         assert.ok(head.includes('<meta name="robots" content="index, follow">'), 'robots');
         const ld = [...head.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1])['@type']);
-        assert.deepStrictEqual(ld, ['WebSite', 'WebApplication', 'WebPage', 'FAQPage'], 'the home JSON-LD: the site, the app, the page and the questions it shows');
+        assert.deepStrictEqual(ld, ['WebSite', 'WebApplication', 'WebPage', 'FAQPage', 'Organization'], 'the home JSON-LD: the site, the app, the page and the questions it shows');
         const faq = [...head.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1])).find((j) => j['@type'] === 'FAQPage');
         assert.ok(faq.mainEntity.length >= 8, 'a dozen questions, one per site in turn');
         const page = r.text.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
