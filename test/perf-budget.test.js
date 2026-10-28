@@ -22,7 +22,7 @@ const BUDGETS = {
     htmlRawKB: 55,   // 50.5 with the Part of OpenVibe section (Shared 4.13, 2026-10-26); measured 45.7 on 2026-10-22: the 12 popular questions now carry their answers inline (and as FAQPage data), plus the hero's figures; 35.7 with 40 sites in the catalog (contracts 0.186.0, 2026-10-15); 32.6 on 2026-10-08 (the home page: hero, search, popular questions, the site cards with one line each, contact)
     htmlBrotliKB: 12,   // 11 with the Part of OpenVibe section (Shared 4.13, 2026-10-26); 9.7 on 2026-10-22 (answers inline); 8.3 with 40 sites (2026-10-15); 7.3
     jsFiles: 5,   // 5 (theme-loader, web-runtime, navbar, footer, boost: openvibe-shared/shell)
-    jsRawKB: 292,   // 287.2 Shared 4.17.0: OpenCoins and Vibes chips (wallet: true) in the navbar; 273.2 openvibe-shared 4.15 footer: the compact footer opens into the whole one, and the pulse line; 264.3 with Shared 4.13.0 (2026-10-26: account links); 239.8
+    jsRawKB: 297,   // 293 openvibe-shared 4.22.0: the navbar's magnifier search button and More dropdown (search.js and loading.js load only when used); 287.2 Shared 4.17.0: OpenCoins and Vibes chips (wallet: true) in the navbar; 273.2 openvibe-shared 4.15 footer: the compact footer opens into the whole one, and the pulse line; 264.3 with Shared 4.13.0 (2026-10-26: account links); 239.8
     jsBrotliKB: 72,   // 70.5 Shared 4.17.0: OpenCoins and Vibes chips (wallet: true) in the navbar; 67.9 openvibe-shared 4.15 footer: the compact footer opens into the whole one, and the pulse line; 65.3 Shared 4.12.0: the light/dark switch, the seasonal mark and the theme pairs; 56.5
     cssFiles: 2,   // 2 (app.css + the cached /shared/showcase.css)
     cssRawKB: 31,   // 26.9 with Shared 4.13.0 (2026-10-26: account links); 19.3
