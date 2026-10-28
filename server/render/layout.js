@@ -22,13 +22,11 @@ const NETWORK_URL = 'https://openvibe.network';
 const SITE_NAME = 'OpenVibe.Help';
 const TAGLINE = 'Answers, support and a way to reach people.';
 const PUBLIC_DIR = path.join(__dirname, '..', '..', 'public');
-// The product's own navigation: one entry per public page it serves. The support queue (/staff) is not here — it
-// is for staff only, and a link in everyone's navbar would be an invitation to a 403. It is linked from /tickets.
+// The product's own places: the main ones carry an icon (phones get them as the bottom tab bar), the rest fold into
+// the navbar's More (Shared 4.22). Search is the navbar's magnifier and What shipped is the footer's.
 const NAV = [
-    { label: 'Answers', href: '/sites' },
-    { label: 'Search', href: '/search' },
-    { label: 'Your tickets', href: '/tickets' },
-    { label: 'What shipped', href: '/updates' },
+    { label: 'Answers', href: '/sites', icon: 'fa-circle-info' },
+    { label: 'Your tickets', href: '/tickets', icon: 'fa-ticket' },
 ];
 
 const hashes = new Map();
@@ -59,7 +57,9 @@ function renderPage(o) {
     const nav = {
         service: 'help',
         apiBase: NETWORK_URL,
-        links: NAV.map((l) => ({ label: l.label, href: l.href, active: pathNow === l.href || pathNow.startsWith(`${l.href}/`) })),
+        links: NAV.map((l) => ({ label: l.label, href: l.href, ...(l.icon ? { icon: l.icon } : {}), ...(l.more ? { more: true } : {}), active: pathNow === l.href || pathNow.startsWith(`${l.href}/`) })),
+        appBar: [{ label: 'Home', href: '/', icon: 'fa-house' }, { label: 'Answers', href: '/sites', icon: 'fa-circle-info' }, { label: 'Search', href: '/search', icon: 'fa-magnifying-glass' }, { label: 'Tickets', href: '/tickets', icon: 'fa-ticket' }],   // phones: the bottom tab bar (Shared 4.20)
+        search: { page: '/search', label: 'OpenVibe.Help' },   // the navbar's magnifier: this site first, then this page (Shared 4.21)
         history: { type: 'page', title: o.title || SITE_NAME },
         silentLogin: `${o.config.baseUrl}/auth/login?silent=1&next={url}`,
         sessionUrl: '/auth/me',
