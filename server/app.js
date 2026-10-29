@@ -159,7 +159,28 @@ async function createApp(opts = {}) {
 
     // ── Pages ───────────────────────────────────────────────
     app.use(rateLimit({ windowMs: 60_000, limit: Number(process.env.HELP_RATE_LIMIT_PER_MIN) || 300, standardHeaders: true, legacyHeaders: false }));
-    app.use(createPageRoutes(ctx));
+    // The agent layer (openvibe-shared/agent-layer): /.well-known/agent.json, and the Markdown twins of the public
+    // pages. Entered only for the manifest and a twin request — a `.md` path, ?format=markdown or an explicit
+    // text/markdown preference — because the layer renders every page signed out, and a Help page is not one page (a
+    // person's ticket, the staff queue, the account bar). It comes before the page routes so `/sites/openvibe.md` is
+    // not read as a site called `openvibe.md`; the app's own page names its twin in the head (server/render/layout.js).
+    const pageRoutes = createPageRoutes(ctx);
+    {
+        const agentRouter = express.Router();
+        require('openvibe-shared/agent-layer').mount(agentRouter, {
+            descriptor: require('./agent-descriptor'),
+            render: require('./agent-pages').createAgentPages({ router: pageRoutes, host: new URL(config.baseUrl).hostname }).renderPublicPage,
+        });
+        app.use((req, res, next) => {
+            // The manifest exactly: the rest of /.well-known/ (security.txt) belongs to the app.
+            if (req.path === '/.well-known/agent.json') return agentRouter(req, res, next);
+            const p = String(req.path || '');
+            if (p.endsWith('.md') || (req.query && req.query.format === 'markdown')
+                || req.accepts(['html', 'text/markdown']) === 'text/markdown') return agentRouter(req, res, next);
+            return next();
+        });
+    }
+    app.use(pageRoutes);
     app.use((req, res) => send(res, 404, { viewer: req.viewer, config, path: req.originalUrl, title: 'Not found', body: html`<h1>Not found</h1><p>No page here. Try <a href="/">the home page</a> or <a href="/updates">the update log</a>.</p>` }));
 
     // eslint-disable-next-line no-unused-vars

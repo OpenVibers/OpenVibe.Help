@@ -17,6 +17,7 @@ const frame = require('openvibe-shared/frame');
 const shell = require('openvibe-shared/shell');
 const cache = require('openvibe-shared/cache-policy');
 const { html, raw, esc } = require('./html');
+const { TWIN_PATH_RE } = require('../agent-pages');
 
 const NETWORK_URL = 'https://openvibe.network';
 const SITE_NAME = 'OpenVibe.Help';
@@ -54,6 +55,8 @@ function renderPage(o) {
     const pathNow = o.path || '/';
     const loginNext = encodeURIComponent(pathNow);
     const canonical = `${o.config.baseUrl}${pathNow.split('?')[0]}`;
+    // A public page names its Markdown twin (openvibe-shared/agent-layer); a signed-in page and a 404 do not.
+    const hasTwin = TWIN_PATH_RE.test(canonical.slice(String(o.config.baseUrl).length)) && o.status !== 404;
     const nav = {
         service: 'help',
         apiBase: NETWORK_URL,
@@ -83,6 +86,8 @@ function renderPage(o) {
         siteName: SITE_NAME,
         description: o.description || `${SITE_NAME} — ${TAGLINE}`,
         canonical,
+        agentLayer: hasTwin,
+        llms: '/llms.txt',
         robots: o.index ? 'index, follow' : 'noindex, nofollow',
         jsonLd: (o.jsonLd || []).filter(Boolean),
         home: '/',
@@ -121,7 +126,7 @@ function send(res, status, o) {
     const personal = o.viewer && o.viewer.kind === 'user';
     if (!res.get('Cache-Control')) res.set('Cache-Control', !personal && o.cache ? o.cache : cache.htmlHeaders({ private: true }));
     res.set('Vary', 'Cookie');
-    res.status(status).type('html').send(renderPage(o));
+    res.status(status).type('html').send(renderPage({ ...o, status }));
 }
 
 module.exports = { renderPage, send, asset, assetVersion, setRelease, SITE_NAME, NETWORK_URL, NAV, raw, html };
