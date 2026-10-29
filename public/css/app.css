@@ -102,3 +102,17 @@ mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; 
 .q-faq summary .q-site { font-weight: 400; }
 .q-faq details p { margin: 4px 0 0; color: var(--text-secondary, #96a7c2); overflow-wrap: anywhere; }
 .site-card-count { margin-top: auto; font-size: .8rem; color: var(--text-secondary, #96a7c2); }
+
+/* Phones (2026-10-29): a taste and a door. The figures are one row, six popular questions show, and the forty sites
+   are a two-column list of names (each opens its page; what each one is reads on wide screens and /sites). */
+@media (max-width: 599px) {
+  .help-stats { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
+  .help-stats div { padding: 10px 12px; }
+  .help-stats dt { font-size: 1.05rem; }
+  .help-stats dd { font-size: .78rem; line-height: 1.35; }
+  .q-faq > details:nth-child(n+7) { display: none; }
+  .site-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .site-card { justify-content: center; min-height: 48px; padding: 8px 12px; }
+  .site-card-line, .site-card-count, .site-card:not(.coming) .site-state { display: none; }
+  .site-card b { overflow-wrap: anywhere; }
+}

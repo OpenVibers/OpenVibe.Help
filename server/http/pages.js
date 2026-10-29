@@ -125,15 +125,15 @@ ${searchForm()}</section>
 <section class="sc-sec" aria-labelledby="h-popular"><h2 id="h-popular">Popular questions</h2>
 <p class="sc-lede">One question from each site in turn, answered the way the site answers it in its own manifest.</p>
 <div class="q-faq">${catalog.popular.map((a) => html`<details><summary><span>${a.question}</span><span class="q-site">${String(a.siteName).replace(/^OpenVibe\./, '')}</span></summary><p>${a.answer}</p><p class="small"><a href="${a.path}">The answer's own page</a> · <a href="/sites/${a.site}">Every ${String(a.siteName).replace(/^OpenVibe\./, '')} question</a></p></details>`)}</div>
-<p class="small"><a href="/sites">All ${catalog.sites.length} sites and their questions</a></p></section>
+<p class="small"><a href="/sites">Every question, site by site</a></p></section>
 <section class="sc-sec" aria-labelledby="h-sites"><h2 id="h-sites">Browse by site</h2>
 <p class="sc-lede">Live sites first; each name opens that site's page, with its own words and its own questions. <a href="/sites">The full list, with what each one is</a>.</p>
-<ul class="site-cards">${catalog.sites.map((x) => html`<li><a class="site-card${x.live ? '' : ' coming'}" href="/sites/${x.id}"><span class="site-card-top"><b>${x.shortName}</b><span class="site-state">${x.live ? 'live' : 'coming'}</span></span><span class="site-card-line">${x.oneLine}</span>${answersBySite.get(x.domain) ? html`<span class="site-card-count">${String(answersBySite.get(x.domain))} ${answersBySite.get(x.domain) === 1 ? 'answer' : 'answers'}</span>` : ''}</a></li>`)}</ul></section>
+<ul class="site-cards">${catalog.sites.map((x) => html`<li><a class="site-card${x.live ? '' : ' coming'}" href="/sites/${x.id}"><span class="site-card-top"><b>${x.shortName}</b><span class="site-state">${x.live ? 'live' : 'coming'}</span></span><span class="site-card-line">${x.oneLine}</span>${answersBySite.get(x.domain) ? html`<span class="site-card-count">${String(answersBySite.get(x.domain))} ${answersBySite.get(x.domain) === 1 ? 'answer' : 'answers'}</span>` : ''}</a></li>`)}</ul>
+<p class="small"><a href="/sites">All ${catalog.sites.length} sites, with what each one is</a></p></section>
 <section class="sc-sec" aria-labelledby="h-contact"><h2 id="h-contact">Contact support</h2>
 <p class="sc-lede">Nothing here answered it? Open a ticket: you and the people who run OpenVibe, in one thread.</p>
 ${contactBlock(req)}</section>
-${raw(showcase.network({ service: 'help' }))}
-${raw(showcase.cta({ title: 'What shipped on OpenVibe.Help', text: 'The update log is the network changelog, filtered to this service.', actions: [{ label: 'The update log', href: '/updates' }, { label: 'The API', href: '/api/v1/sites' }] }))}`,
+${raw(showcase.network({ service: 'help' }))}`,
         });
     });
 
