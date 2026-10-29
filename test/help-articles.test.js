@@ -91,7 +91,10 @@ const WITH_FAQ = [
                 if (entry.question.length <= 60) assert.ok(title.startsWith(esc(entry.question)), `${article.path}: the title is not the question (${title})`);
                 assert.ok(r.text.includes(esc(entry.answer)), `${article.path}: the answer is not the manifest's`);
                 assert.ok(r.text.includes(`<link rel="canonical" href="https://openvibe.help${article.path}">`), `${article.path}: canonical`);
-                const ld = [...r.text.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+                // One JSON-LD script per page: every node lives in the page's @graph.
+                const scripts = [...r.text.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+                assert.strictEqual(scripts.length, 1, `${article.path}: expected one JSON-LD script`);
+                const ld = scripts.flatMap((x) => (Array.isArray(x['@graph']) ? x['@graph'] : [x]));
                 assert.ok(ld.some((n) => n['@type'] === 'Article' && n.headline && n.headline.startsWith(entry.question.slice(0, 40))), `${article.path}: no Article JSON-LD`);
                 // One question, one answer: the page's own heading and the manifest's answer, never a second pair.
                 const faq = ld.filter((n) => n['@type'] === 'FAQPage');
