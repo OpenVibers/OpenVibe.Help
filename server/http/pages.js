@@ -211,6 +211,8 @@ ${textBlock(a.answer)}
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Sites', href: '/sites' }, { label: article.siteName, href: `/sites/${article.site}` }, { label: truncate(article.question, 60) }],
             jsonLd: [
                 seo.jsonLd.article({ headline: article.question, url: `${base()}${article.path}`, description: truncate(article.answer, 160) }),
+                // One question, one answer, both verbatim from the manifest: the page's own <h1> and its body.
+                seo.jsonLd.faq([{ q: article.question, a: article.answer }]),
                 seo.jsonLd.breadcrumbs([{ name: 'OpenVibe.Help', url: `${base()}/` }, { name: article.siteName, url: `${base()}/sites/${article.site}` }, { name: article.question, url: `${base()}${article.path}` }]),
             ],
             body: html`<article class="answer">
