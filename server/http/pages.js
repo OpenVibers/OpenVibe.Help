@@ -38,6 +38,15 @@ const SITE_STATE_TEXT = { live: 'live', coming: 'coming' };
 const textBlock = (t) => html`<p class="txt">${t}</p>`;
 const truncate = (s, n) => (String(s == null ? '' : s).length > n ? `${String(s).slice(0, n - 1).trimEnd()}…` : String(s == null ? '' : s));
 
+/**
+ * The page's JSON-LD in one script: every node in one @graph, so a page carries exactly one JSON-LD script.
+ * The nodes keep their own fields; only their own @context goes, because the graph carries it once.
+ */
+const oneGraph = (nodes) => {
+    const graph = nodes.filter(Boolean).map((n) => { const c = { ...n }; delete c['@context']; return c; });
+    return [{ '@context': 'https://schema.org', '@graph': graph }];
+};
+
 function createPageRoutes(ctx) {
     const { config, s, catalog, search } = ctx;
     const r = asyncRouter();
@@ -209,10 +218,12 @@ ${textBlock(a.answer)}
             title: article.question,
             description: truncate(article.answer, 160),
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Sites', href: '/sites' }, { label: article.siteName, href: `/sites/${article.site}` }, { label: truncate(article.question, 60) }],
-            jsonLd: [
+            jsonLd: oneGraph([
                 seo.jsonLd.article({ headline: article.question, url: `${base()}${article.path}`, description: truncate(article.answer, 160) }),
+                // One question, one answer, both verbatim from the manifest: the page's own <h1> and its body.
+                seo.jsonLd.faq([{ q: article.question, a: article.answer }]),
                 seo.jsonLd.breadcrumbs([{ name: 'OpenVibe.Help', url: `${base()}/` }, { name: article.siteName, url: `${base()}/sites/${article.site}` }, { name: article.question, url: `${base()}${article.path}` }]),
-            ],
+            ]),
             body: html`<article class="answer">
 <h1>${article.question}</h1>
 <p class="small muted">Answered by <a href="/sites/${article.site}">${article.siteName}</a> ${siteBadge(article.siteState)}</p>
