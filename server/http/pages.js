@@ -18,7 +18,10 @@ const cache = require('openvibe-shared/cache-policy');
 const { asyncRouter } = require('./router');
 const { createDiscoveryRoutes, homeJsonLd } = require('./discovery');
 const { sameOrigin } = require('./principal');
-const { html, raw, table, notice, time, badge } = require('../render/html');
+const { html, raw, render, table, notice, time, badge } = require('../render/html');
+// The short home (the owner's rule, 2026-10-30): a pick block for the site list, folds for the parts a reader
+// rarely needs.
+const { pickList, pickListRules, foldBlock } = require('../render/short');
 const { send } = require('../render/layout');
 const { searchArticles, markTerms } = require('../search');
 const tickets = require('../tickets/tickets');
@@ -118,22 +121,38 @@ function createPageRoutes(ctx) {
             jsonLd: faqLd ? [...homeJsonLd(config), faqLd] : homeJsonLd(config),
             description: `Search the answers of every OpenVibe site, browse them one by one, or open a support ticket that stays one conversation.`,
             styles: [showcase.STYLESHEET],
+            // The rule that shows the picked site of the pick list: one per site, written for this page.
+            inlineStyles: [`@supports selector(:has(*)){@media (max-width:640px){${pickListRules('sites', catalog.sites.length)}}}`],
             body: html`${raw(hero)}
 <section class="sc-sec" id="search" aria-labelledby="h-search"><h2 id="h-search">Search the help centre</h2>
 <p class="sc-lede">One box over every site's answers, and over the whole OpenVibe network.</p>
 ${searchForm()}</section>
-<section class="sc-sec" aria-labelledby="h-popular"><h2 id="h-popular">Popular questions</h2>
+${raw(pickList({
+    key: 'sites',
+    label: 'Browse by site',
+    head: 'Browse by site',
+    labels: catalog.sites.map((x) => x.shortName),
+    html: render(html`<section class="sc-sec" aria-labelledby="h-sites"><h2 id="h-sites">Browse by site</h2>
+<p class="sc-lede">Live sites first; each name opens that site's page, with its own words and its own questions. <a href="/sites">The full list, with what each one is</a>.</p>
+<ul class="site-cards pick-list">${catalog.sites.map((x, i) => html`<li data-i="${i}"><a class="site-card${x.live ? '' : ' coming'}" href="/sites/${x.id}"><span class="site-card-top"><b>${x.shortName}</b><span class="site-state">${x.live ? 'live' : 'coming'}</span></span><span class="site-card-line">${x.oneLine}</span>${answersBySite.get(x.domain) ? html`<span class="site-card-count">${String(answersBySite.get(x.domain))} ${answersBySite.get(x.domain) === 1 ? 'answer' : 'answers'}</span>` : ''}</a></li>`)}</ul>
+<p class="small"><a href="/sites">All ${catalog.sites.length} sites, with what each one is</a></p></section>`),
+}))}
+${raw(foldBlock({
+    id: 'popular',
+    head: '<h2 id="h-popular">Popular questions</h2>',
+    html: render(html`<section class="sc-sec" aria-labelledby="h-popular"><h2>Popular questions</h2>
 <p class="sc-lede">One question from each site in turn, answered the way the site answers it in its own manifest.</p>
 <div class="q-faq">${catalog.popular.map((a) => html`<details><summary><span>${a.question}</span><span class="q-site">${String(a.siteName).replace(/^OpenVibe\./, '')}</span></summary><p>${a.answer}</p><p class="small"><a href="${a.path}">The answer's own page</a> · <a href="/sites/${a.site}">Every ${String(a.siteName).replace(/^OpenVibe\./, '')} question</a></p></details>`)}</div>
-<p class="small"><a href="/sites">Every question, site by site</a></p></section>
-<section class="sc-sec" aria-labelledby="h-sites"><h2 id="h-sites">Browse by site</h2>
-<p class="sc-lede">Live sites first; each name opens that site's page, with its own words and its own questions. <a href="/sites">The full list, with what each one is</a>.</p>
-<ul class="site-cards">${catalog.sites.map((x) => html`<li><a class="site-card${x.live ? '' : ' coming'}" href="/sites/${x.id}"><span class="site-card-top"><b>${x.shortName}</b><span class="site-state">${x.live ? 'live' : 'coming'}</span></span><span class="site-card-line">${x.oneLine}</span>${answersBySite.get(x.domain) ? html`<span class="site-card-count">${String(answersBySite.get(x.domain))} ${answersBySite.get(x.domain) === 1 ? 'answer' : 'answers'}</span>` : ''}</a></li>`)}</ul>
-<p class="small"><a href="/sites">All ${catalog.sites.length} sites, with what each one is</a></p></section>
+<p class="small"><a href="/sites">Every question, site by site</a></p></section>`),
+}))}
 <section class="sc-sec" aria-labelledby="h-contact"><h2 id="h-contact">Contact support</h2>
 <p class="sc-lede">Nothing here answered it? Open a ticket: you and the people who run OpenVibe, in one thread.</p>
 ${contactBlock(req)}</section>
-${raw(showcase.network({ service: 'help' }))}`,
+${raw(foldBlock({
+    id: 'network',
+    head: '<h2 id="h-network">Part of OpenVibe</h2>',
+    html: showcase.network({ service: 'help' }),
+}))}`,
         });
     });
 

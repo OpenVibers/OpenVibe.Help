@@ -14,6 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const appIcon = require('openvibe-shared/app-icon');
 const frame = require('openvibe-shared/frame');
+const { foldBlock } = require('./short');
 const shell = require('openvibe-shared/shell');
 const cache = require('openvibe-shared/cache-policy');
 const { html, raw, esc } = require('./html');
@@ -98,6 +99,7 @@ function renderPage(o) {
 ${appIcon.headTags({ site: 'help' })}
 <link rel="stylesheet" href="${asset('css/app.css')}">
 ${(o.styles || []).map((name) => `<link rel="stylesheet" href="${esc(ovServe.url(name))}">`).join('\n')}
+${(o.inlineStyles || []).map((css) => `<style>${css}</style>`).join('\n')}
 ${render(scripts)}
 <meta name="ov-boost" content="help@${esc(RELEASE)}">
 <script src="${ovServe.url('boost.js')}" data-main="#main" defer></script>`,
@@ -107,7 +109,7 @@ ${render(scripts)}
 <main id="main" class="page">
 ${render(crumbs)}
 ${render(o.body)}
-${o.path === '/' ? frame.shipped({ service: 'help', title: `Recently shipped on ${SITE_NAME}` }) : ''}
+${o.path === '/' ? foldBlock({ id: 'shipped', head: `<h2 id="h-shipped">Recently shipped on ${SITE_NAME}</h2>`, html: frame.shipped({ service: 'help', title: `Recently shipped on ${SITE_NAME}` }) }) : ''}
 </main>
 <script>
 window.__OV_PAGE = ${JSON.stringify({ navbar: nav, footer }).replace(/</g, '\\u003c')};
