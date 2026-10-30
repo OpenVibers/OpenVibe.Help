@@ -116,3 +116,10 @@ mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; 
   .site-card-line, .site-card-count, .site-card:not(.coming) .site-state { display: none; }
   .site-card b { overflow-wrap: anywhere; }
 }
+
+/* Touch targets on phones (fleet audit 2026-10-29): the touch-only hit area for this group. Nothing moves with a mouse. */
+@media (pointer: coarse) {
+  /* The lone link under a section: a vertical-only hit area, the width stays as it is. */
+  p.small a:only-child { position: relative; }
+  p.small a:only-child::after { content: ''; position: absolute; left: 0; right: 0; top: -14px; bottom: -14px; }
+}
