@@ -67,6 +67,10 @@ const READ_WIDTH = `(() => {
         // the browser context, so setting it on one covers the other).
         await phone.send('Network.setCookie', { name: 'help_at', value: t.network.userToken(writer), url: t.base }).catch(() => {});
         const narrow = await harness.openPage(browser, context, { width: 320, height: 800, js: false, block: BLOCK });
+        // Four tabs share the 160 answer pages: the same browser context, so the cookie and the block list apply,
+        // and the test stays well inside the runner's per-file timeout on a loaded CI machine.
+        const extra = await Promise.all([0, 1, 2].map(() => harness.openPage(browser, context, { width: 390, height: 900, js: false, block: BLOCK })));
+        const answerPages = [phone, ...extra];
         const failures = [];
         const visit = async (page, width, path, expectStatus = 200) => {
             await page.goto(t.base + path, { quietMs: 20, maxMs: 1500, minMs: 30 });
@@ -78,7 +82,9 @@ const READ_WIDTH = `(() => {
         };
 
         // Every answer page at 390 px, and the longest titles and answers again at 320 px.
-        for (const article of articles) await visit(phone, 390, article.path);
+        await Promise.all(answerPages.map(async (pg, i) => {
+            for (let j = i; j < articles.length; j += answerPages.length) await visit(pg, 390, articles[j].path);
+        }));
         const longest = [...articles].sort((a, b) => (b.question.length + b.answer.length) - (a.question.length + a.answer.length)).slice(0, 6);
         for (const article of longest) await visit(narrow, 320, article.path);
         await visit(narrow, 320, '/');
@@ -97,6 +103,7 @@ const READ_WIDTH = `(() => {
         await check('every answer page fits 390 px, and the answer, ticket and down-site pages fit 320 px', () => {
             assert.deepStrictEqual(failures, [], `${failures.length} page(s) do not fit:\n${JSON.stringify(failures.slice(0, 10), null, 2)}`);
         });
+        for (const pg of extra) await pg.close();
         await phone.close();
         await narrow.close();
     } finally {
