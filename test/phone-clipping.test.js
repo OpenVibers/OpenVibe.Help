@@ -91,16 +91,26 @@ const READ_WIDTH = `(() => {
         await visit(narrow, 320, '/sites');
 
         // The ticket flow: start, list, and one conversation, all signed in through the cookie above.
+        let primary = null;
         for (const page of [phone, narrow]) {
             const width = page === phone ? 390 : 320;
             // Signed in through the cookie above: all four are the real pages a reader sees, not the 401 prompts.
             await visit(page, width, '/tickets/new', 200);
+            if (width === 390) {
+                primary = await page.evaluate(`(() => {
+                    const b = document.querySelector('form.ticket-form button[type="submit"]');
+                    if (!b) return null;
+                    const r = b.getBoundingClientRect();
+                    return { width: r.width, height: r.height };
+                })()`);
+            }
             await visit(page, width, '/tickets', 200);
             await visit(page, width, `/tickets/${ticket.id}`, 200);
             await visit(page, width, `/sites/${coming.id}`, 200);
         }
+        if (!primary || primary.height < 44 || primary.width < 300) failures.push({ path: '/tickets/new', width: 390, control: 'primary submit', primary });
 
-        await check('every answer page fits 390 px, and the answer, ticket and down-site pages fit 320 px', () => {
+        await check('every answer page fits 390 px, the ticket submit is 44 px and full width, and the ticket and down-site pages fit 320 px', () => {
             assert.deepStrictEqual(failures, [], `${failures.length} page(s) do not fit:\n${JSON.stringify(failures.slice(0, 10), null, 2)}`);
         });
         for (const pg of extra) await pg.close();

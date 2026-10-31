@@ -117,11 +117,16 @@ const WITH_FAQ = [
                 assert.ok(title.startsWith(esc(entry.question.slice(0, 40))), `${article.path}: the title is not the question (${title})`);
                 if (entry.question.length <= 60) assert.ok(title.startsWith(esc(entry.question)), `${article.path}: the title is not the question (${title})`);
                 assert.ok(r.text.includes(esc(entry.answer)), `${article.path}: the answer is not the manifest's`);
-                assert.ok(r.text.includes('Answered by'), `${article.path}: the answerer is not named`);
-                assert.ok(r.text.includes('<strong>Site:</strong>'), `${article.path}: no site fact`);
-                assert.ok(r.text.includes('<strong>Last changed:</strong>'), `${article.path}: no last-changed fact`);
-                assert.ok(r.text.includes("not recorded by the site's manifest"), `${article.path}: a changed date was invented`);
-                assert.ok(r.text.includes('Help last read it'), `${article.path}: no honest read date`);
+                assert.match(r.text, /class="small muted answer-meta"/, `${article.path}: no one-line site facts`);
+                assert.ok(r.text.includes(`>${esc(article.site)}</a>`), `${article.path}: the site's domain is not linked`);
+                assert.match(r.text, /checked \d{1,2} [A-Z][a-z]{2} \d{4}/, `${article.path}: no checked date`);
+                assert.ok(r.text.includes('title="When Help last read the site\'s manifest"'), `${article.path}: the checked date has no tooltip`);
+                assert.ok(r.text.includes('Where this answer comes from'), `${article.path}: no source fold`);
+                assert.match(r.text, /<details class="ovk-fold" id="answer-source">/, `${article.path}: the source is not a closed fold`);
+                assert.match(r.text, /\/shared\/kit\.css\?v=/, `${article.path}: the fold has no stylesheet`);
+                assert.ok(r.text.includes('Generated from') && r.text.includes('OpenVibe.Contracts'), `${article.path}: no provenance in the fold`);
+                assert.ok(!r.text.includes('not recorded by the site\'s manifest'), `${article.path}: the old debug copy is still there`);
+                assert.ok(!r.text.includes('answer-facts'), `${article.path}: the old facts card is still there`);
                 assert.ok(r.text.includes(`<link rel="canonical" href="https://openvibe.help${article.path}">`), `${article.path}: canonical`);
                 // One JSON-LD script per page: every node lives in the page's @graph.
                 const scripts = [...r.text.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
