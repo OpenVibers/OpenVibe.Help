@@ -9,6 +9,7 @@
 const assert = require('assert');
 const { signJwt } = require('./helpers/mocks');
 const { boot, check, done } = require('./helpers/boot');
+const store = require('../server/tickets/store');
 
 const SAME = { 'sec-fetch-site': 'same-origin' };
 const TKT = /^tkt_[0-9A-HJKMNP-TV-Z]{26}$/;
@@ -173,6 +174,9 @@ const SUBJECT = 'Nothing happens when I press Go Live';
         const form = await t.get('/tickets/new', { as: kim });
         assert.strictEqual(form.status, 200);
         assert.ok(form.text.includes('<select id="site" name="site"'), 'no site picker');
+        assert.ok(form.text.includes('class="ovk-btn ovk-btn--primary" type="submit"'), 'the submit is not the primary button');
+        assert.ok(form.text.includes('>Open the ticket</span></button>'), 'the submit has no label');
+        assert.match(form.text, /\/shared\/kit\.css\?v=/, 'the primary button has no stylesheet');
         for (const site of t.ctx.catalog.sites.slice(0, 5)) assert.ok(form.text.includes(`value="${site.id}"`), `${site.id} is not in the picker`);
         const made = await t.get('/tickets', { as: kim, form: { site: 'openvibe.wiki', subject: 'A wiki question', message: 'How do I cite a source?', page_url: '' }, headers: SAME });
         assert.strictEqual(made.status, 303, made.text.slice(0, 200));
@@ -290,6 +294,47 @@ const SUBJECT = 'Nothing happens when I press Go Live';
             clock += 60_000;
             assert.strictEqual((await tl.get('/api/v1/tickets', { as: rosa, json: { subject: 'Next minute', message: 'body' }, headers: SAME })).status, 201);
         } finally { await tl.close(); }
+    });
+
+    await check('the ticket flow states what a reader gets back and how long a first reply has taken', async () => {
+        let clock = Date.UTC(2026, 9, 30, 12, 0, 0);
+        const tp = await boot({ now: () => clock });
+        try {
+            const empty = await tp.get('/tickets/new');
+            assert.strictEqual(empty.status, 401);
+            assert.ok(empty.text.includes('A person on the OpenVibe team replies here, not a bot'), 'no person, no bot stated');
+            assert.ok(empty.text.includes('First-reply time: not measured yet'), 'an unmeasured time was invented');
+            assert.ok(empty.text.includes('no ticket here has had a staff reply'), 'the reason is not stated');
+
+            const writer = tp.network.addUser('writer');
+            const helper = tp.network.addUser('helper', { role: 'admin' });
+            const made = await store.create(tp.ctx.s, {
+                requester: `user:${writer.subject}`, site: '', subject: 'A question',
+                pageUrl: null, body: 'What happens next?',
+            });
+            clock += 45 * 60_000;
+            await store.addMessage(tp.ctx.s, made.id, { author: `user:${helper.subject}`, role: 'staff', body: 'Here is the answer.' });
+            const measured = await tp.get('/tickets/new');
+            assert.ok(measured.text.includes('Median first reply: 45 min (1 ticket so far).'), 'the small-sample median is not shown');
+            const list = await tp.get('/tickets', { as: writer });
+            assert.strictEqual(list.status, 200);
+            assert.ok(list.text.includes('Median first reply: 45 min'), 'the ticket list does not carry the promise');
+            const one = await tp.get(`/tickets/${made.id}`, { as: writer });
+            assert.ok(one.text.includes('Median first reply: 45 min'), 'the conversation does not carry the promise');
+
+            // Four more answered tickets at 30 min: five answered in all, so the page drops the "(n so far)" rest.
+            for (let i = 0; i < 4; i++) {
+                const more = await store.create(tp.ctx.s, {
+                    requester: `user:${writer.subject}`, site: '', subject: `A follow-up ${i + 1}`,
+                    pageUrl: null, body: 'What happens next?',
+                });
+                clock += 30 * 60_000;
+                await store.addMessage(tp.ctx.s, more.id, { author: `user:${helper.subject}`, role: 'staff', body: 'Here is the answer.' });
+            }
+            const five = await tp.get('/tickets/new');
+            assert.ok(five.text.includes('Median first reply: 30 min.'), 'the five-ticket median is not shown alone');
+            assert.ok(!five.text.includes('tickets so far'), 'the sample rest is still shown at five tickets');
+        } finally { await tp.close(); }
     });
 
     await t.close();

@@ -71,6 +71,33 @@ const WITH_FAQ = [
         }
     });
 
+    await check('a site that is not serving says so in one line and points to the network status page', async () => {
+        // Every catalog site is live today (40/40 with Contracts 0.222.0), so the not-serving branch is exercised with
+        // one constructed entry: the same page code, the state a manifest would give it if it stopped being live.
+        const model = catalog.sites.find((x) => x.live);
+        assert.ok(model);
+        const coming = { ...model, id: 'openvibe.not-serving', name: 'OpenVibe.NotServing', state: 'coming', live: false, service: 'help' };
+        catalog.byId.set(coming.id, coming);
+        const r = await t.get(`/sites/${coming.id}`);
+        assert.strictEqual(r.status, 200);
+        assert.ok(r.text.includes(`${esc(coming.name)} is not serving yet.`), 'no one-line state');
+        const status = `${t.config.statusUrl}#svc-${coming.service}`;
+        assert.ok(r.text.includes(`href="${esc(status)}"`), `no status link (${status})`);
+        assert.ok(r.text.includes('See its status on the OpenVibe status page'), 'the status link is not explained');
+    });
+
+    await check('the site list and the answer list say there is no promoted content', async () => {
+        const line = 'No promoted or sponsored answers or sites';
+        for (const path of ['/', '/sites']) {
+            const r = await t.get(path);
+            assert.strictEqual(r.status, 200, path);
+            assert.ok(r.text.includes(line), `${path}: no no-promoted statement`);
+        }
+        const search = await t.get('/search?q=agent');
+        assert.strictEqual(search.status, 200);
+        assert.ok(search.text.includes(line), '/search: no no-promoted statement');
+    });
+
     await check('every question in every faq is a page of its own, with the question as the SEO title and the answer verbatim', async () => {
         assert.ok(WITH_FAQ.length >= 3, `only ${WITH_FAQ.length} sites answer questions`);
         let articles = 0;
@@ -90,6 +117,16 @@ const WITH_FAQ = [
                 assert.ok(title.startsWith(esc(entry.question.slice(0, 40))), `${article.path}: the title is not the question (${title})`);
                 if (entry.question.length <= 60) assert.ok(title.startsWith(esc(entry.question)), `${article.path}: the title is not the question (${title})`);
                 assert.ok(r.text.includes(esc(entry.answer)), `${article.path}: the answer is not the manifest's`);
+                assert.match(r.text, /class="small muted answer-meta"/, `${article.path}: no one-line site facts`);
+                assert.ok(r.text.includes(`>${esc(article.site)}</a>`), `${article.path}: the site's domain is not linked`);
+                assert.match(r.text, /checked \d{1,2} [A-Z][a-z]{2} \d{4}/, `${article.path}: no checked date`);
+                assert.ok(r.text.includes('title="When Help last read the site\'s manifest"'), `${article.path}: the checked date has no tooltip`);
+                assert.ok(r.text.includes('Where this answer comes from'), `${article.path}: no source fold`);
+                assert.match(r.text, /<details class="ovk-fold" id="answer-source">/, `${article.path}: the source is not a closed fold`);
+                assert.match(r.text, /\/shared\/kit\.css\?v=/, `${article.path}: the fold has no stylesheet`);
+                assert.ok(r.text.includes('Generated from') && r.text.includes('OpenVibe.Contracts'), `${article.path}: no provenance in the fold`);
+                assert.ok(!r.text.includes('not recorded by the site\'s manifest'), `${article.path}: the old debug copy is still there`);
+                assert.ok(!r.text.includes('answer-facts'), `${article.path}: the old facts card is still there`);
                 assert.ok(r.text.includes(`<link rel="canonical" href="https://openvibe.help${article.path}">`), `${article.path}: canonical`);
                 // One JSON-LD script per page: every node lives in the page's @graph.
                 const scripts = [...r.text.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));

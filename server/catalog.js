@@ -43,6 +43,18 @@ function firstSentence(text, max = 180) {
     return one.length > max ? `${one.slice(0, max - 1).replace(/[\s,;:]$/, '')}…` : one;
 }
 
+/**
+ * The name a site card or chip shows. Most manifests already name the site ("Blog"); a service site whose name is its
+ * host ("ai.openvibe.services") gets its first label as a name ("AI"), never the host. A short first label is
+ * uppercased, so "ai" is "AI"; a longer one is title-cased, so "inventory" is "Inventory".
+ */
+function shortSiteName(name) {
+    const s = String(name || '').replace(/^OpenVibe\./, '');
+    if (!s.includes('.')) return s;
+    const first = s.split('.')[0];
+    return first.length <= 3 ? first.toUpperCase() : first.charAt(0).toUpperCase() + first.slice(1);
+}
+
 /** The host a service manifest's site is served on (products.siteDomain keeps one rule for both homes). */
 const siteDomain = contracts.products.siteDomain;
 
@@ -181,8 +193,8 @@ function buildSites() {
         return {
             ...e,
             id: e.domain,
-            // "OpenVibe.Actor" in a list of OpenVibe sites reads as "Actor"; OpenRestream keeps its own name.
-            shortName: String(e.name || e.domain).replace(/^OpenVibe\./, ''),
+            // "OpenVibe.Actor" in a list of OpenVibe sites reads as "Actor"; ai.openvibe.services reads as "AI".
+            shortName: shortSiteName(e.name || e.domain),
             state,
             live: state === 'live',
             // A product manifest has no `what` of its own: its tagline is the one line, or the description's first sentence.

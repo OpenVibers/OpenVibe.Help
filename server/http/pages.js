@@ -13,15 +13,16 @@ const express = require('express');
 const ovServe = require('openvibe-shared/serve');
 const frame = require('openvibe-shared/frame');
 const showcase = require('openvibe-shared/showcase');
+const kit = require('openvibe-shared/kit');
 const seo = require('openvibe-shared/seo');
 const cache = require('openvibe-shared/cache-policy');
 const { asyncRouter } = require('./router');
 const { createDiscoveryRoutes, homeJsonLd } = require('./discovery');
 const { sameOrigin } = require('./principal');
 const { html, raw, render, table, notice, time, badge } = require('../render/html');
-// The short home (the owner's rule, 2026-10-30): a pick block for the site list, folds for the parts a reader
-// rarely needs.
-const { pickList, pickListRules, foldBlock } = require('../render/short');
+// The short home (the owner's rule, 2026-10-30): folds for the parts a reader rarely needs. The site list is one
+// list of links (the pick chips and the picked card below them read as the same list twice; removed 2026-10-31).
+const { foldBlock } = require('../render/short');
 const { send } = require('../render/layout');
 const { searchArticles, markTerms } = require('../search');
 const tickets = require('../tickets/tickets');
@@ -40,6 +41,31 @@ const SITE_STATE_TEXT = { live: 'live', coming: 'coming' };
 /** Plain text exactly as it was typed: escaped by the template, line breaks kept by the stylesheet. */
 const textBlock = (t) => html`<p class="txt">${t}</p>`;
 const truncate = (s, n) => (String(s == null ? '' : s).length > n ? `${String(s).slice(0, n - 1).trimEnd()}…` : String(s == null ? '' : s));
+
+// Stated where the answers and the sites are listed: there is no ad or promoted slot in either (outcome 5). It is a
+// fact about how the catalog is built, not a slogan: every entry comes from OpenVibe.Contracts, in the site's words.
+const NO_PROMOTED = 'No promoted or sponsored answers or sites: every entry comes from OpenVibe.Contracts, in its site\'s own words, and no one can pay for a place.';
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** A date as a reader says it ("30 Oct 2026"), UTC so the page reads the same in every time zone. */
+function shortDate(iso) {
+    const d = new Date(iso);
+    return Number.isFinite(d.getTime()) ? `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}` : '';
+}
+
+/** A measured reply time, in words: under a minute, minutes, hours, days. No number is made up. */
+function replyTime(ms) {
+    if (!Number.isFinite(ms)) return '';
+    const minutes = Math.round(ms / 60_000);
+    if (minutes < 1) return 'under a minute';
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    if (hours < 24) return rest ? `${hours} h ${rest} min` : `${hours} h`;
+    const days = Math.floor(hours / 24);
+    const spare = hours % 24;
+    return spare ? `${days} d ${spare} h` : `${days} d`;
+}
 
 /**
  * The page's JSON-LD in one script: every node in one @graph, so a page carries exactly one JSON-LD script.
@@ -74,6 +100,23 @@ function createPageRoutes(ctx) {
 
     const signInPrompt = (what, next) => html`<div class="notice">${what} <a href="/auth/login?next=${encodeURIComponent(next)}">Sign in with OpenVibe</a>.</div>`;
 
+    /**
+     * The ticket promise: what a reader gets back, and the first-reply time this service has measured. The number is
+     * the median over its own help_messages rows (server/tickets/store.js replyStats); until a ticket has had a staff
+     * reply it says so. Never a target typed in by hand.
+     */
+    const ticketPromise = (stats) => {
+        const sample = stats && stats.answered && stats.answered < 5 ? ` (${stats.answered} ticket${stats.answered === 1 ? '' : 's'} so far)` : '';
+        const measured = stats && stats.answered
+            ? html`<strong>Median first reply: ${replyTime(stats.medianMs)}${sample}.</strong>`
+            : html`<strong>First-reply time: not measured yet${stats && stats.unknown ? '' : ' — no ticket here has had a staff reply'}.</strong>`;
+        return notice(html`A person on the OpenVibe team replies here, not a bot; the conversation stays on this ticket. ${measured}`, 'info');
+    };
+    const measuredReplies = async () => {
+        // A read that failed is not the same as no reply: the page then says "not measured yet" and stops there.
+        try { return await store.replyStats(s); } catch { return { answered: 0, medianMs: null, unknown: true }; }
+    };
+
     const searchForm = (q = '', { big = false } = {}) => html`<form class="search-form${big ? ' search-big' : ''}" method="get" action="/search" role="search">
 <label class="sr-only" for="q">Search the help centre</label>
 <input id="q" name="q" type="search" value="${q}" placeholder="Search every OpenVibe site: how a feature works, what a price is, what is not working" maxlength="200" required>
@@ -82,12 +125,14 @@ function createPageRoutes(ctx) {
 
     // ── Home ─────────────────────────────────────────────────
     /** Contact support: the form itself is /tickets/new, and a visitor who is not signed in is asked to sign in. */
-    function contactBlock(req) {
+    function contactBlock(req, replies) {
         if (!signedIn(req)) {
             return html`<div class="card">${signInPrompt('To open a ticket', '/tickets/new')}
+${ticketPromise(replies)}
 <p class="small muted">A ticket is one conversation with the people who run OpenVibe, kept in your account — not an inbox you lose. Signing in also lets you see and answer it later.</p></div>`;
         }
-        return html`<div class="card"><p class="small muted">Signed in as <strong>${req.viewer.displayName || req.viewer.username || 'you'}</strong>.</p>
+        return html`<div class="card">${ticketPromise(replies)}
+<p class="small muted">Signed in as <strong>${req.viewer.displayName || req.viewer.username || 'you'}</strong>.</p>
 <p><a class="sc-btn sc-primary" href="/tickets/new">Open a ticket</a> <a class="sc-btn" href="/tickets">Your tickets</a></p></div>`;
     }
 
@@ -99,6 +144,7 @@ function createPageRoutes(ctx) {
         const features = catalog.sites.reduce((n, x) => n + ((x.pillars && x.pillars.length) || 0), 0);
         let solved = 0;
         try { solved = (await store.staffCounts(s)).solved; } catch { /* the figure is left out, never guessed */ }
+        const replies = await measuredReplies();
         const n = (v) => Number(v).toLocaleString('en-US');
         const stats = [[`${n(live.length)} sites`, 'live, every one with its own page here'], [`${n(catalog.articles.length)} answers`, 'each in the site\'s own words, linked back']];
         if (features) stats.push([`${n(features)} features`, 'described by the sites that run them']);
@@ -121,22 +167,15 @@ function createPageRoutes(ctx) {
             jsonLd: faqLd ? [...homeJsonLd(config), faqLd] : homeJsonLd(config),
             description: `Search the answers of every OpenVibe site, browse them one by one, or open a support ticket that stays one conversation.`,
             styles: [showcase.STYLESHEET],
-            // The rule that shows the picked site of the pick list: one per site, written for this page.
-            inlineStyles: [`@supports selector(:has(*)){@media (max-width:640px){${pickListRules('sites', catalog.sites.length)}}}`],
             body: html`${raw(hero)}
 <section class="sc-sec" id="search" aria-labelledby="h-search"><h2 id="h-search">Search the help centre</h2>
 <p class="sc-lede">One box over every site's answers, and over the whole OpenVibe network.</p>
 ${searchForm()}</section>
-${raw(pickList({
-    key: 'sites',
-    label: 'Browse by site',
-    head: 'Browse by site',
-    labels: catalog.sites.map((x) => x.shortName),
-    html: render(html`<section class="sc-sec" aria-labelledby="h-sites"><h2 id="h-sites">Browse by site</h2>
+<section class="sc-sec" id="sites" aria-labelledby="h-sites"><h2 id="h-sites">Browse by site</h2>
 <p class="sc-lede">Live sites first; each name opens that site's page, with its own words and its own questions. <a href="/sites">The full list, with what each one is</a>.</p>
-<ul class="site-cards pick-list">${catalog.sites.map((x, i) => html`<li data-i="${i}"><a class="site-card${x.live ? '' : ' coming'}" href="/sites/${x.id}"><span class="site-card-top"><b>${x.shortName}</b><span class="site-state">${x.live ? 'live' : 'coming'}</span></span><span class="site-card-line">${x.oneLine}</span>${answersBySite.get(x.domain) ? html`<span class="site-card-count">${String(answersBySite.get(x.domain))} ${answersBySite.get(x.domain) === 1 ? 'answer' : 'answers'}</span>` : ''}</a></li>`)}</ul>
-<p class="small"><a href="/sites">All ${catalog.sites.length} sites, with what each one is</a></p></section>`),
-}))}
+<p class="small muted">${NO_PROMOTED}</p>
+<ul class="site-cards">${catalog.sites.map((x) => html`<li><a class="site-card${x.live ? '' : ' coming'}" href="/sites/${x.id}"><span class="site-card-top"><b>${x.shortName}</b><span class="site-state">${x.live ? 'live' : 'coming'}</span></span><span class="site-card-line">${x.oneLine}</span>${answersBySite.get(x.domain) ? html`<span class="site-card-count">${String(answersBySite.get(x.domain))} ${answersBySite.get(x.domain) === 1 ? 'answer' : 'answers'}</span>` : ''}</a></li>`)}</ul>
+<p class="small"><a href="/sites">All ${catalog.sites.length} sites, with what each one is</a></p></section>
 ${raw(foldBlock({
     id: 'popular',
     head: '<h2 id="h-popular">Popular questions</h2>',
@@ -147,7 +186,7 @@ ${raw(foldBlock({
 }))}
 <section class="sc-sec" aria-labelledby="h-contact"><h2 id="h-contact">Contact support</h2>
 <p class="sc-lede">Nothing here answered it? Open a ticket: you and the people who run OpenVibe, in one thread.</p>
-${contactBlock(req)}</section>
+${contactBlock(req, replies)}</section>
 ${raw(foldBlock({
     id: 'network',
     head: '<h2 id="h-network">Part of OpenVibe</h2>',
@@ -175,6 +214,7 @@ ${raw(foldBlock({
             ],
             body: html`<h1>Every OpenVibe site</h1>
 <p class="sc-lede">${catalog.sites.length} addresses, ${catalog.sites.every((x) => x.live) ? 'every one live' : `${catalog.sites.filter((x) => x.live).length} of them live`}. The state is the service manifest's own <code>exposure.state</code>: a site is live when a service exposes it live. Everything else on this page is that site's manifest, word for word.</p>
+<p class="small muted">${NO_PROMOTED}</p>
 ${provenance(catalog.source)}
 ${group('live', 'Live', 'These answer today.')}
 ${group('coming', 'Coming', 'Registered in the catalog, not serving yet, or serving something else for now.')}`,
@@ -189,6 +229,9 @@ ${group('coming', 'Coming', 'Registered in the catalog, not serving yet, or serv
         }, 404);
         const articles = catalog.bySite.get(site.id) || [];
         const faqPairs = articles.map((a) => ({ q: a.question, a: a.answer }));
+        // The network's own status page is the public read of whether a service is serving. A site that is not live
+        // links there in one line instead of reporting a health state Help does not own.
+        const statusHref = site.service ? `${config.statusUrl}#svc-${site.service}` : config.statusUrl;
         page(req, res, {
             index: true, cache: PUBLIC_CACHE,
             // "Help with Search", not "Search": the bare name of the OpenVibe.Search page read exactly like Help's own
@@ -203,10 +246,10 @@ ${group('coming', 'Coming', 'Registered in the catalog, not serving yet, or serv
             body: html`<h1>${site.name} ${siteBadge(site.state)}</h1>
 ${site.tagline ? html`<p class="sc-lede">${site.tagline}</p>` : ''}
 ${site.description ? textBlock(site.description) : ''}
-<p class="site-links">${site.state === 'live'
-        ? html`<a class="sc-btn sc-primary" href="${site.url}" rel="noopener nofollow">Open ${site.domain}</a>`
-        : html`<span class="muted">Not serving yet — ${site.url} is its address.</span>`}
-${site.state === 'live' ? html`<a class="sc-btn" href="${site.updatesUrl}" rel="noopener nofollow">What shipped on ${site.name}</a>` : ''}</p>
+${site.state === 'live'
+        ? html`<p class="site-links"><a class="sc-btn sc-primary" href="${site.url}" rel="noopener nofollow">Open ${site.domain}</a>
+<a class="sc-btn" href="${site.updatesUrl}" rel="noopener nofollow">What shipped on ${site.name}</a></p>`
+        : notice(html`${site.name} is not serving yet. <a href="${statusHref}" rel="noopener nofollow">See its status on the OpenVibe status page</a>.`, 'warn')}
 ${provenance(site.provenance)}
 
 ${site.pillars.length ? html`<section class="sc-sec" aria-labelledby="h-pillars"><h2 id="h-pillars">${site.state === 'live' ? 'What you can do' : 'What it will do'}</h2>
@@ -232,8 +275,9 @@ ${textBlock(a.answer)}
             body: html`<h1>No such question</h1><p class="muted">No answer here for <code>${truncate(`${req.params.site}/${req.params.slug}`, 90)}</code>. <a href="/sites">See every site</a>.</p>`,
         }, 404);
         const site = catalog.get(article.site);
+        const domain = site ? html`<a href="${site.url}" rel="noopener nofollow">${article.site}</a>` : article.site;
         page(req, res, {
-            index: true, cache: PUBLIC_CACHE,
+            index: true, cache: PUBLIC_CACHE, styles: ['kit.css'],
             title: article.question,
             description: truncate(article.answer, 160),
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Sites', href: '/sites' }, { label: article.siteName, href: `/sites/${article.site}` }, { label: truncate(article.question, 60) }],
@@ -245,11 +289,11 @@ ${textBlock(a.answer)}
             ]),
             body: html`<article class="answer">
 <h1>${article.question}</h1>
-<p class="small muted">Answered by <a href="/sites/${article.site}">${article.siteName}</a> ${siteBadge(article.siteState)}</p>
+<p class="small muted answer-meta"><a href="/sites/${article.site}">${article.siteName}</a> · ${domain} · ${siteBadge(article.siteState)} · <time datetime="${catalog.generatedAt}" title="When Help last read the site's manifest">checked ${shortDate(catalog.generatedAt)}</time></p>
 ${textBlock(article.answer)}
 <p class="site-links"><a class="sc-btn" href="/sites/${article.site}">Everything ${article.siteName} answers</a>
 ${site ? html`<a class="sc-btn" href="${site.url}" rel="noopener nofollow">${site.domain}</a><a class="sc-btn" href="${site.updatesUrl}" rel="noopener nofollow">What shipped</a>` : ''}</p>
-${provenance(article.provenance)}
+${raw(kit.fold({ id: 'answer-source', title: 'Where this answer comes from', body: render(provenance(article.provenance)) }))}
 </article>
 <section class="sc-sec" aria-labelledby="h-more"><h2 id="h-more">Other questions from ${article.siteName}</h2>
 <ul class="q-list">${(catalog.bySite.get(article.site) || []).filter((a) => a.slug !== article.slug).map((a) => html`<li><a href="${a.path}">${a.question}</a></li>`)}</ul></section>`,
@@ -272,6 +316,7 @@ ${provenance(article.provenance)}
 ${searchForm(q, { big: true })}
 ${!q ? html`<p class="sc-lede">Type something above. The first half of the answer comes from each site's own manifest; the second from <a href="${search.url}" rel="noopener nofollow">OpenVibe.Search</a>, the network's own index.</p>` : ''}
 ${q ? html`<section class="sc-sec" aria-labelledby="h-help"><h2 id="h-help">Help articles</h2>
+<p class="small muted">${NO_PROMOTED}</p>
 ${hits.length
                 ? html`<p class="sc-lede">${hits.length} article${hits.length === 1 ? '' : 's'} from the sites' own manifests, best match first.</p>
 <ol class="results">${hits.map((h) => html`<li><a href="${h.article.path}">${markTerms(h.article.question, q)}</a>
@@ -356,7 +401,8 @@ ${problem ? notice(problem, 'warn') : ''}
 <p class="small muted">Plain text, up to ${tickets.LIMITS.body} characters.</p></div>
 <div class="field"><label for="page_url">Page you were on</label><input id="page_url" name="page_url" type="text" maxlength="${tickets.LIMITS.pageUrl}" value="${values.pageUrl || ''}" placeholder="https://openvibe.example/some/page">
 <p class="small muted">Optional, and only useful if you have it: it is stored as text and never opened by us.</p></div>
-<p><button class="sc-btn sc-primary" type="submit">Open the ticket</button> <a class="sc-btn" href="/tickets">Your tickets</a></p>
+<p class="ticket-submit">${raw(kit.button({ label: 'Open the ticket', kind: 'primary' }))}</p>
+<p class="small"><a href="/tickets">Your tickets</a></p>
 </form>`;
 
     // "Report a problem" in every site's footer (openvibe-shared footer.js) opens /tickets/new?site=<domain>&page=<url>:
@@ -367,18 +413,20 @@ ${problem ? notice(problem, 'warn') : ''}
         const pageUrl = typeof q.page === 'string' && q.page.length <= tickets.LIMITS.pageUrl ? tickets.pageLink(q.page) : null;
         return { site: catalog.byId.has(site) ? site : '', pageUrl: pageUrl || '' };
     };
-    r.get('/tickets/new', (req, res) => {
+    r.get('/tickets/new', async (req, res) => {
         const pre = prefillOf(req.query);
+        const replies = await measuredReplies();
         const back = `/tickets/new${pre.site || pre.pageUrl ? `?${new URLSearchParams({ ...(pre.site ? { site: pre.site } : {}), ...(pre.pageUrl ? { page: pre.pageUrl } : {}) })}` : ''}`;
         if (!signedIn(req)) return page(req, res, {
             title: 'Open a ticket', crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
-            body: html`<h1>Open a ticket</h1>${signInPrompt('A ticket belongs to your OpenVibe account, so you can see and answer it later.', back)}`,
+            body: html`<h1>Open a ticket</h1>${ticketPromise(replies)}${signInPrompt('A ticket belongs to your OpenVibe account, so you can see and answer it later.', back)}`,
         }, 401);
         page(req, res, {
-            title: 'Open a ticket',
+            title: 'Open a ticket', styles: ['kit.css'],
             description: 'Tell OpenVibe support what happened; the ticket stays one conversation.',
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
             body: html`<h1>Open a ticket</h1>
+${ticketPromise(replies)}
 <p class="sc-lede">One conversation with the people who run OpenVibe. You will see it under <a href="/tickets">your tickets</a> and can reply there.</p>
 ${ticketForm({ values: pre })}`,
         });
@@ -392,7 +440,7 @@ ${ticketForm({ values: pre })}`,
         const b = req.body || {};
         const check = tickets.validateNew({ site: b.site, subject: b.subject, message: b.message, pageUrl: b.page_url }, { sites: new Set(catalog.sites.map((x) => x.id)) });
         if (!check.ok) return page(req, res, {
-            title: 'Open a ticket', crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
+            title: 'Open a ticket', styles: ['kit.css'], crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
             body: html`<h1>Open a ticket</h1>${ticketForm({ values: { site: b.site, subject: b.subject, message: b.message, pageUrl: b.page_url }, problem: check.detail })}`,
         }, 422);
         const row = await store.create(s, {
@@ -406,9 +454,10 @@ ${ticketForm({ values: pre })}`,
     const canSee = (req, row) => Boolean(row) && (row.requester === requesterOf(req) || staffViewer(req));
 
     r.get('/tickets', async (req, res) => {
+        const replies = await measuredReplies();
         if (!signedIn(req)) return page(req, res, {
             title: 'Your tickets', crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets' }],
-            body: html`<h1>Your tickets</h1>${signInPrompt('Your tickets belong to your OpenVibe account.', '/tickets')}`,
+            body: html`<h1>Your tickets</h1>${ticketPromise(replies)}${signInPrompt('Your tickets belong to your OpenVibe account.', '/tickets')}`,
         }, 401);
         const out = await store.listForRequester(s, requesterOf(req), { limit: PAGE_LIMIT });
         return page(req, res, {
@@ -416,6 +465,7 @@ ${ticketForm({ values: pre })}`,
             description: 'The support tickets you opened, and where each conversation stands.',
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets' }],
             body: html`<h1>Your tickets</h1>
+${ticketPromise(replies)}
 <p class="sc-lede">Everything you opened, newest first. A ticket stays one conversation — reply on its page and it carries on there.</p>
 ${staffViewer(req) ? notice(html`You are OpenVibe staff, so you can also <a href="/staff">read the whole support queue</a>.`, 'info') : ''}
 <p><a class="sc-btn sc-primary" href="/tickets/new">Open a ticket</a></p>
@@ -428,9 +478,10 @@ ${out.next ? html`<p><a href="/tickets?before=${out.next}">Older tickets</a></p>
     });
 
     r.get('/tickets/:id', async (req, res) => {
+        const replies = await measuredReplies();
         if (!signedIn(req)) return page(req, res, {
             title: 'Your tickets', crumbs: [{ label: 'Home', href: '/' }, { label: 'Tickets', href: '/tickets' }, { label: 'Ticket' }],
-            body: html`<h1>A ticket</h1>${signInPrompt('A ticket belongs to an OpenVibe account.', `/tickets/${encodeURIComponent(String(req.params.id).slice(0, 40))}`)}`,
+            body: html`<h1>A ticket</h1>${ticketPromise(replies)}${signInPrompt('A ticket belongs to an OpenVibe account.', `/tickets/${encodeURIComponent(String(req.params.id).slice(0, 40))}`)}`,
         }, 401);
         const row = tickets.isTicketId(req.params.id) ? await store.get(s, req.params.id) : null;
         if (!canSee(req, row)) return page(req, res, {
@@ -459,6 +510,7 @@ ${tickets.STATES.map((st) => html`<label class="radio"><input type="radio" name=
 <button class="sc-btn" type="submit">Set the state</button></fieldset>
 <p class="small muted">Changing the state does not send a message. Reply below if the person needs to hear something.</p>
 </form>` : ''}
+${ticketPromise(replies)}
 <form class="card reply-form" method="post" action="/tickets/${row.id}">
 <label for="message">${staffViewer(req) ? 'Reply as OpenVibe support' : 'Reply'}</label>
 <textarea id="message" name="message" rows="6" maxlength="${tickets.LIMITS.body}" required placeholder="${staffViewer(req) ? 'Answer the question, or ask for what you still need.' : 'Anything else we should know?'}"></textarea>
