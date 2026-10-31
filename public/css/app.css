@@ -118,6 +118,9 @@ mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; 
   .site-card { justify-content: center; min-height: 48px; padding: 8px 12px; }
   .site-card-line, .site-card-count, .site-card:not(.coming) .site-state { display: none; }
   .site-card b { overflow-wrap: anywhere; }
+  /* The home's site list shows its first eight on a phone; the link under it opens all of them (2026-10-31: forty
+     cards were three phone screens on their own). */
+  #sites .site-cards > li:nth-child(n+9) { display: none; }
 }
 
 /* Touch targets on phones (fleet audit 2026-10-29): the touch-only hit area for this group. Nothing moves with a mouse. */
