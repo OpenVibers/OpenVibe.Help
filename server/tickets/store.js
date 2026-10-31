@@ -67,6 +67,33 @@ async function staffCounts(s) {
     return out;
 }
 
+/**
+ * How long a first staff reply has actually taken: the median over the most recent answered tickets, from this
+ * service's own help_messages rows. It is a measurement, not a promise: when no ticket has had a staff reply yet
+ * there is no number, and the page says that instead of guessing. A ticket's first person message is its
+ * creation, so the clock starts there.
+ */
+async function replyStats(s, { sample = 200 } = {}) {
+    const n = Math.min(500, Math.max(1, Number.parseInt(sample, 10) || 200));
+    // The latest answered tickets, not the latest tickets: an old reply still counts even if the queue's newest
+    // tickets are unanswered, so "not measured" can only mean no ticket ever had a staff reply.
+    const rows = await s.db.many(
+        `SELECT (EXTRACT(EPOCH FROM (r.replied_at::timestamptz - a.asked_at::timestamptz)) * 1000) AS ms
+         FROM (SELECT ticket_id, MIN(created_at) AS asked_at
+               FROM help_messages WHERE role = 'person' GROUP BY ticket_id) a
+         JOIN (SELECT ticket_id, MIN(created_at) AS replied_at
+               FROM help_messages WHERE role = 'staff' GROUP BY ticket_id) r
+           ON r.ticket_id = a.ticket_id
+         WHERE r.replied_at >= a.asked_at
+         ORDER BY a.asked_at DESC LIMIT $1`, [n]);
+    const durations = rows.map((row) => Number(row.ms)).filter((ms) => Number.isFinite(ms) && ms >= 0);
+    if (!durations.length) return { answered: 0, medianMs: null };
+    durations.sort((a, b) => a - b);
+    const mid = Math.floor(durations.length / 2);
+    const medianMs = durations.length % 2 ? durations[mid] : Math.round((durations[mid - 1] + durations[mid]) / 2);
+    return { answered: durations.length, medianMs };
+}
+
 const messages = (s, ticketId) => s.db.many('SELECT id, author, role, body, created_at FROM help_messages WHERE ticket_id = $1 ORDER BY id', [String(ticketId)]);
 
 /** Append a reply and move updated_at. `role` is person or staff, decided by the caller's session. */
@@ -88,4 +115,4 @@ async function setState(s, ticketId, state) {
     return get(s, ticketId);
 }
 
-module.exports = { create, get, listForRequester, listForStaff, staffCounts, messages, addMessage, setState };
+module.exports = { create, get, listForRequester, listForStaff, staffCounts, replyStats, messages, addMessage, setState };

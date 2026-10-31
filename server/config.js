@@ -48,9 +48,12 @@ function load(env = process.env) {
             cacheMs: Math.max(0, int(env.HELP_SEARCH_CACHE_MS, 5 * 60_000)),
         },
 
-        // OpenVibe.Network: SSO (OAuth2 authorization server with PKCE) and its JWKS.
+        // OpenVibe.Network: SSO (OAuth2 authorization server with PKCE) and its JWKS. The status page is the network's
+        // own public read of every service's readiness (https://openvibe.network/status); a site page links to it
+        // instead of inventing a state of its own.
         networkUrl,
         networkInternalUrl: trim(env.OV_NETWORK_INTERNAL_URL || 'http://127.0.0.1:4000'),
+        statusUrl: trim(env.HELP_STATUS_URL || `${networkUrl}/status`),
         networkIssuer: trim(env.OV_NETWORK_ISSUER || networkUrl),
         // The audience this service's app, agent and service tokens carry.
         audience: env.HELP_AUDIENCE || 'openvibe.help',
