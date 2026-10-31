@@ -2,9 +2,8 @@
 /**
  * The home on a phone (the owner's short-pages rule, 2026-10-30): one or two screens, app-like.
  *
- *   foldBlock()  a part a reader rarely needs, closed on a phone and open where there is room. The page's own markup
- *                keeps it open, so a browser without the script shows it as before; the script closes it on a narrow
- *                screen and remembers the reader's choice.
+ *   foldBlock()  a part a reader rarely needs, in a fold that starts open on every screen: the content is never
+ *                hidden, and a reader may still close it. Nothing here hides content on a phone.
  *
  * The CSS for the fold lives in this site's own stylesheet. The old pick block (a chip row plus the picked card) was
  * removed on 2026-10-31: the home's site list is one list of links, so the chips and the card read as the same list
@@ -18,7 +17,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</
  *   foldBlock({ id, head, html })
  */
 function foldBlock({ id, head, html }) {
-    return '<details class="hp-fold hp-fold-block" id="' + esc(id) + '" open><summary>' + head + '<span class="hp-fold-hint">tap to open</span></summary>' + html + '</details>' + foldScript(id);
+    return '<details class="hp-fold hp-fold-block" id="' + esc(id) + '" open><summary>' + head + '</summary>' + html + '</details>';
 }
 
 /** The script a fold carries: closed on a phone unless the reader opened it before, and it remembers that. */

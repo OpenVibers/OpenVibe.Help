@@ -30,26 +30,30 @@ const { boot, check, done } = require('./helpers/boot');
             assert.ok(!page.includes('name="pick-sites"'), 'a chip row still sits above the list');
         });
 
-        await check('on a phone the one list is two columns of names, and the fold heading hides its marker', async () => {
+        await check('on a phone the one list is a sideways row and keeps each site\'s line; nothing is hidden', async () => {
             const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'app.css'), 'utf8');
-            assert.match(css, /\.site-cards \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); gap: 8px; \}/, 'the phone site list is two columns');
-            assert.match(css, /\.site-card-line, \.site-card-count, \.site-card:not\(\.coming\) \.site-state \{ display: none; \}/, 'a phone shows the name only');
+            assert.match(css, /\.site-cards \{ display: flex; gap: 8px; overflow-x: auto;/, 'the phone site list is a sideways row');
+            assert.ok(!/\.site-card-line[^{]*\{[^}]*display: none/.test(css), 'a phone still shows each site\'s line');
+            assert.ok(!/nth-child\(n\+7\)[^{]*\{[^}]*display: none/.test(css), 'no popular question is hidden on a phone');
             assert.match(css, /\.hp-fold-block > summary \{ display: block; list-style: none; padding: 0; \}/, 'the summary marker is gone');
             assert.match(css, /\.hp-fold-block > summary::marker \{ content: ''; \}/, 'the standard marker is empty');
             assert.match(css, /\.hp-fold-block > summary::-webkit-details-marker \{ display: none; \}/, 'the WebKit marker is hidden');
         });
 
-        await check('the parts a reader rarely needs are folds, open in the page and closed on a phone', async () => {
+        await check('the parts a reader rarely needs are folds that open in the page and stay open', async () => {
             const r = await t.get('/');
             const page = r.text;
             for (const id of ['popular', 'network', 'shipped']) {
                 assert.ok(page.includes(`<details class="hp-fold hp-fold-block" id="${id}" open>`), `${id} is a fold, open in the page`);
-                assert.ok(page.includes(`document.getElementById("${id}")`), `${id} has the script that closes it on a phone`);
             }
-            // The content of the folds stays in the page.
+            assert.ok(!page.includes('document.getElementById("popular")'), 'no script closes the folds on a phone');
+            assert.ok(!page.includes('document.getElementById("network")'), 'no script closes the folds on a phone');
+            assert.ok(!page.includes('document.getElementById("shipped")'), 'no script closes the folds on a phone');
+            // Every question is in the page, and the folds keep their own headings.
             assert.match(page, /<h2 id="h-popular">Popular questions<\/h2>/);
             assert.match(page, /<h2 id="h-network">Part of OpenVibe<\/h2>/);
             assert.match(page, /<h2 id="h-shipped">Recently shipped on OpenVibe.Help<\/h2>/);
+            assert.strictEqual((page.match(/class="q-faq"/g) || []).length, 1, 'the popular questions are on the home');
         });
     } finally {
         await done(t);
