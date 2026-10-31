@@ -34,6 +34,7 @@ const { boot, check, done } = require('./helpers/boot');
             const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'app.css'), 'utf8');
             assert.match(css, /\.site-cards \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); gap: 8px; \}/, 'the phone site list is two columns');
             assert.match(css, /\.site-card-line, \.site-card-count, \.site-card:not\(\.coming\) \.site-state \{ display: none; \}/, 'a phone shows the name only');
+            assert.match(css, /#sites \.site-cards > li:nth-child\(n\+9\) \{ display: none; \}/, 'the home shows eight sites on a phone; the link under the list opens all of them');
             assert.match(css, /\.hp-fold-block > summary \{ display: block; list-style: none; padding: 0; \}/, 'the summary marker is gone');
             assert.match(css, /\.hp-fold-block > summary::marker \{ content: ''; \}/, 'the standard marker is empty');
             assert.match(css, /\.hp-fold-block > summary::-webkit-details-marker \{ display: none; \}/, 'the WebKit marker is hidden');
