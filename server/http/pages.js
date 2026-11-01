@@ -98,7 +98,7 @@ function createPageRoutes(ctx) {
         return html`<p class="prov small muted">Generated from <a href="${p.url}" rel="noopener nofollow">${p.source || p.name}</a>${files.length ? html` · ${files.map((f) => html`<code>${f}</code>`)}` : ''}${compact ? '' : html` · read ${time(catalog.generatedAt)}`}</p>`;
     };
 
-    const signInPrompt = (what, next) => html`<div class="notice">${what} <a href="/auth/login?next=${encodeURIComponent(next)}">Sign in with OpenVibe</a>.</div>`;
+    const signInPrompt = (what, next) => html`<div class="notice signin-prompt"><p>${what}</p><p><a class="sc-btn sc-primary" href="/auth/login?next=${encodeURIComponent(next)}">Sign in with OpenVibe</a></p></div>`;
 
     /**
      * The ticket promise: what a reader gets back, and the first-reply time this service has measured. The number is
