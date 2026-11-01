@@ -154,3 +154,7 @@ mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; 
   .hp-fold-block > summary { cursor: pointer; }
   .hp-fold-hint { display: inline; margin-left: 8px; font-size: .78rem; font-weight: 600; color: var(--text-secondary, #96a7c2); }
 }
+
+/* A sign-in prompt: the sentence, then the button under it (2026-11-01). */
+.notice.signin-prompt { display: grid; gap: 12px; justify-items: start; }
+.notice.signin-prompt p { margin: 0; }
