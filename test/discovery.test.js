@@ -48,7 +48,10 @@ const PRIVATE = ['/auth/', '/api/'];
             assert.match(r.headers.get('content-type'), /^text\/plain/);
             assert.match(r.headers.get('cache-control') || '', /public, max-age=\d+/);
             assert.ok(r.text.startsWith('# OpenVibe.Help'), 'no title');
-            assert.ok(r.text.includes('(https://openvibe.help/updates)'), 'no updates link');
+            // AGT-5: each of Help's own pages is linked at its Markdown twin, and the secondary links are Optional.
+            assert.ok(r.text.includes('(https://openvibe.help/index.md)'), 'the home link is not its twin');
+            assert.ok(r.text.includes('(https://openvibe.help/updates.md)'), 'no updates link');
+            assert.ok(r.text.includes('\n## Optional\n'), 'no ## Optional section');
             assert.ok(r.text.includes('(https://openvibe.services)'), 'no pointer to the developer platform');
             assert.ok(r.text.includes('https://openvibe.help/sitemap.xml'), 'sitemap not listed');
             assert.ok(r.text.includes('(https://openvibe.help/llms-full.txt)'), 'llms-full.txt not listed');

@@ -74,9 +74,13 @@ function createDiscoveryRoutes(ctx) {
             + `# Agent manifest: ${abs('/.well-known/agent.json')}\n`);
     });
 
+    // Every one of Help's own pages is linked at its Markdown twin (AGT-5; openvibe-shared 4.108.0 leaves /api/ paths
+    // and other sites' links as they are). What an agent may skip for a shorter context is in `optional`, last.
     r.get('/llms.txt', (_req, res) => {
         res.type('text/plain').set('Cache-Control', TEXT).send(seo.llmsTxt({
             name: SITE_NAME,
+            markdown: true,
+            base: site,
             summary: 'OpenVibe.Help: the help and support centre for every OpenVibe site. The answers are generated from OpenVibe.Contracts at boot — each site\'s own manifest, verbatim — so a page here is the product\'s own words, with a link back to where they were read.',
             details: 'Every site and every question is a page: /sites lists them, /sites/<domain> is one site with its pillars and its questions, and /a/<domain>/<slug> is one question with its answer. /search searches those answers and the network through OpenVibe.Search. Signed in, a person can open a support ticket; the ticket and its conversation are private to them (and to OpenVibe staff). Every page is server-rendered and readable without JavaScript.',
             sections: [
@@ -91,15 +95,16 @@ function createDiscoveryRoutes(ctx) {
                     { title: 'Every site (JSON)', url: abs('/api/v1/sites') },
                     { title: 'One site (JSON)', url: abs(`/api/v1/sites/${catalog.sites[0] ? catalog.sites[0].id : 'openvibe.network'}`) },
                     { title: 'The articles (JSON, ?q= ranks them)', url: abs('/api/v1/articles?q=live') },
-                    { title: 'Sitemap', url: abs('/sitemap.xml') },
-                    { title: 'Full text for language models', url: abs('/llms-full.txt') },
                     { title: 'Release metadata (JSON)', url: abs('/release.json') },
                 ] },
-                { title: 'Elsewhere', links: [
-                    { title: 'OpenVibe.Search', url: 'https://search.openvibe.network', note: 'the network\'s own index, the "From across OpenVibe" half of /search' },
-                    { title: 'OpenVibe.Services', url: 'https://openvibe.services', note: 'apps, keys and capability grants' },
-                    { title: 'OpenVibe.Network', url: 'https://openvibe.network', note: 'accounts, apps and grants' },
-                ] },
+            ],
+            // llmstxt.org's "## Optional": what an agent may skip when it needs a shorter context.
+            optional: [
+                { title: 'Sitemap', url: abs('/sitemap.xml') },
+                { title: 'Full text for language models', url: abs('/llms-full.txt') },
+                { title: 'OpenVibe.Search', url: 'https://search.openvibe.network', note: 'the network\'s own index, the "From across OpenVibe" half of /search' },
+                { title: 'OpenVibe.Services', url: 'https://openvibe.services', note: 'apps, keys and capability grants' },
+                { title: 'OpenVibe.Network', url: 'https://openvibe.network', note: 'accounts, apps and grants' },
             ],
         }));
     });
