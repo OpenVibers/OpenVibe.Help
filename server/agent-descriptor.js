@@ -10,6 +10,7 @@ module.exports = {
     home: 'https://openvibe.help',
     site: 'openvibe.help',
     api: '/api/v1',
+    openapi: '/openapi.json',
     policy: {
         auth: ['none', 'Network OIDC'],
         rateLimit: 'Pages and /api/v1 are limited per address to 300 and 240 requests a minute; opening a ticket and answering one are limited per caller',
