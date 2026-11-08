@@ -24,7 +24,10 @@ const { boot, check, done } = require('./helpers/boot');
             const cards = [...block.matchAll(/<a class="site-card[^"]*" href="\/sites\/([^"]+)"><span class="site-card-top"><b>([^<]+)<\/b>/g)];
             assert.strictEqual(cards.length, t.ctx.catalog.sites.length, 'every site is in the one list');
             const nameOf = (id) => (cards.find((c) => c[1] === id) || [])[2];
-            assert.strictEqual(nameOf('ai.openvibe.services'), 'AI', 'the AI site shows its name, not its host');
+            // The AI address moved into OpenVibe.Exchange (openvibe-contracts v0.338.0 marks it moved), so it is
+            // not a site of its own any more; the site list shows where its pages went.
+            assert.strictEqual(nameOf('ai.openvibe.services'), undefined, 'the moved AI address is not a site');
+            assert.strictEqual(nameOf('openvibe.exchange'), 'Exchange', 'the Exchange site shows its name, not its host');
             assert.strictEqual(nameOf('openvibe.blog'), 'Blog');
             assert.ok(cards.every(([, , name]) => !name.includes('.')), 'a host is shown as a name');
             assert.ok(!page.includes('name="pick-sites"'), 'a chip row still sits above the list');
