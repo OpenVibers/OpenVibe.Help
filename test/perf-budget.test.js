@@ -19,7 +19,7 @@ const { measure, check, format } = require('openvibe-shared/perf-budget');
 // against 11.6 KB of the shared showcase.css. Raised 2026-10-08 from 16.5/4.1 to 18.5/4.5 for a measured
 // 17.5/4.3. The HTML budget did NOT move: those pages fit in the skeleton home page's 24.9 KB budget with room.
 // 2026-11-08: openvibe-shared v4.150.0; CI measured JS 353.9 KB raw / 84.4 KB brotli.
-
+// 2026-11-08: openvibe-shared v4.149.0; CI measured JS 352.9 KB raw / 84.2 KB brotli.
 const BUDGETS = {
     htmlRawKB: 68,   // 65.6 with the short home (2026-10-30: the site list is one pick block, a chip per site, and the parts a reader rarely needs are folds); 55.6 with openvibe-shared 4.53.0: the footer's columns fold on phones (2026-10-30); 50.5 with the Part of OpenVibe section (Shared 4.13, 2026-10-26); measured 45.7 on 2026-10-22: the 12 popular questions now carry their answers inline (and as FAQPage data), plus the hero's figures; 35.7 with 40 sites in the catalog (contracts 0.186.0, 2026-10-15); 32.6 on 2026-10-08 (the home page: hero, search, popular questions, the site cards with one line each, contact)
     htmlBrotliKB: 14.1,   // 14.1 with openvibe-contracts 0.289.1 (2026-11-05: the contract's site list and version lines); 13 with the short home (2026-10-30: the pick block's chips and the folds' scripts); 11 with the Part of OpenVibe section (Shared 4.13, 2026-10-26); 9.7 on 2026-10-22 (answers inline); 8.3 with 40 sites (2026-10-15); 7.3
