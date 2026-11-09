@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use OpenVibe.Help in research or a product, cite it as below."
+title: openvibe-help
+type: software
+authors:
+  - name: OpenVibe
+    alias: OpenVibers
+    website: https://openvibe.network
+repository-code: https://github.com/OpenVibers/OpenVibe.Help
+url: https://openvibe.help
+license: AGPL-3.0-only
+abstract: "Help for every OpenVibe site, with a ticket to a person when the answer is not there, at openvibe.help."
+keywords:
+  - openvibe
+  - documentation
+  - faq
+  - help-center
+  - support
