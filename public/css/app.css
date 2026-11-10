@@ -91,7 +91,6 @@ mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; 
 .site-state { font-size: .7rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border-light, #2c3d5c); color: var(--text-secondary, #96a7c2); }
 .site-card:not(.coming) .site-state { color: var(--success-text, var(--success, #22c55e)); border-color: color-mix(in srgb, var(--success, #22c55e) 45%, transparent); }
 .site-card-line { font-size: .86rem; line-height: 1.4; color: var(--text-secondary, #96a7c2); }
-@media (prefers-reduced-motion: reduce) { .site-card { transition: none; } }
 
 /* The home: the figures beside the hero, the popular questions with their answers, each site's answer count. */
 .help-stats { margin: 0; display: grid; gap: 10px; }
