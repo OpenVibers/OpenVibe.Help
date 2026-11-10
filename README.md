@@ -2,6 +2,9 @@
 
 > Answers, support and a way to reach people.
 
+**Live site:** https://openvibe.help · **API docs:** https://openvibe.services · **For AI:** https://openvibe.help/llms.txt
+**Run it:** `npm ci && npm run dev` (Node 22 or newer) · **Tests:** `npm test`
+
 **Status:** the product is written, tested and deployed (see [STATUS.json](STATUS.json)).
 **Domain:** `openvibe.help` · **Port:** 5020 · **Service id:** `help` · **Env prefix:** `HELP`
 **License:** AGPL-3.0 (same as every OpenVibe service).
