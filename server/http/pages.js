@@ -238,6 +238,7 @@ ${group('coming', 'Coming', 'Registered in the catalog, not serving yet, or serv
             // search page in titles and results (2026-10-17).
             title: `Help with ${site.name}`,
             description: truncate(site.oneLine || site.description, 160),
+            styles: ['kit.css'],
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Sites', href: '/sites' }, { label: site.name }],
             jsonLd: [
                 seo.jsonLd.breadcrumbs([{ name: 'OpenVibe.Help', url: `${base()}/` }, { name: 'Sites', url: `${base()}/sites` }, { name: site.name, url: `${base()}/sites/${site.id}` }]),
@@ -262,7 +263,7 @@ ${articles.map((a) => html`<article class="faq-item" id="${a.anchor}">
 <h3><a href="${a.path}">${a.question}</a></h3>
 ${textBlock(a.answer)}
 <p class="small"><a href="${a.path}">Open this question on its own page</a></p></article>`)}`
-        : html`<p class="muted">This site's manifest has no questions yet.${site.state === 'coming' ? ' It is still coming.' : ''} <a href="/tickets/new">Ask us instead</a> or read the site's own pages at <a href="${site.url}" rel="noopener nofollow">${site.domain}</a>.</p>`}
+        : raw(kit.empty({ icon: 'chat', title: 'No questions yet', text: `This site's manifest has no questions yet.${site.state === 'coming' ? ' It is still coming.' : ''} Ask us instead, or read the site's own pages at ${site.domain}.`, action: { href: '/tickets/new', label: 'Ask us instead', icon: 'mail' } }))}
 </section>`,
         });
     });
@@ -272,7 +273,8 @@ ${textBlock(a.answer)}
         const article = catalog.article(req.params.site, req.params.slug);
         if (!article) return page(req, res, {
             title: 'No such question', crumbs: [{ label: 'Home', href: '/' }, { label: 'Sites', href: '/sites' }, { label: 'Not found' }],
-            body: html`<h1>No such question</h1><p class="muted">No answer here for <code>${truncate(`${req.params.site}/${req.params.slug}`, 90)}</code>. <a href="/sites">See every site</a>.</p>`,
+            body: html`<h1>No such question</h1>${raw(kit.empty({ icon: 'search', title: 'No such question', text: `No answer here for ${truncate(`${req.params.site}/${req.params.slug}`, 90)}.`, action: { href: '/sites', label: 'See every site', icon: 'grid' } }))}`,
+            styles: ['kit.css'],
         }, 404);
         const site = catalog.get(article.site);
         const domain = site ? html`<a href="${site.url}" rel="noopener nofollow">${article.site}</a>` : article.site;
@@ -311,6 +313,7 @@ ${raw(kit.fold({ id: 'answer-source', title: 'Where this answer comes from', bod
             index: true, cache: PUBLIC_CACHE,
             title: q ? `Search: ${truncate(q, 60)}` : 'Search',
             description: 'Search every OpenVibe site\'s own answers, and the whole network through OpenVibe.Search.',
+            styles: ['kit.css'],
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Search' }],
             body: html`<h1>Search</h1>
 ${searchForm(q, { big: true })}
@@ -322,7 +325,7 @@ ${hits.length
 <ol class="results">${hits.map((h) => html`<li><a href="${h.article.path}">${markTerms(h.article.question, q)}</a>
 <p class="small muted">${markTerms(h.snippet, q)}</p>
 <p class="small"><a href="/sites/${h.article.site}">${h.article.siteName}</a></p></li>`)}</ol>`
-                : html`<p class="muted">No article matches “${q}”. Try fewer or different words, <a href="/sites">browse the sites</a>, or <a href="/tickets/new">open a ticket</a>.</p>`}
+                : raw(kit.empty({ icon: 'search', title: 'No article matches', text: `No article matches “${q}”. Try fewer or different words. If a site did not answer your question, open a ticket.`, action: { href: '/sites', label: 'Browse the sites', icon: 'grid' } }))}
 </section>` : ''}
 ${q ? html`<section class="sc-sec" aria-labelledby="h-net"><h2 id="h-net">From across OpenVibe</h2>
 ${network.ok
@@ -463,6 +466,7 @@ ${ticketForm({ values: pre })}`,
         return page(req, res, {
             title: 'Your tickets',
             description: 'The support tickets you opened, and where each conversation stands.',
+            styles: ['kit.css'],
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets' }],
             body: html`<h1>Your tickets</h1>
 ${ticketPromise(replies)}
@@ -472,7 +476,7 @@ ${staffViewer(req) ? notice(html`You are OpenVibe staff, so you can also <a href
 ${out.rows.length
                 ? html`<ul class="ticket-list">${out.rows.map((t) => html`<li><a href="/tickets/${t.id}"><b>${t.subject}</b></a> ${ticketBadge(t.state)}
 <span class="muted small">${t.site || 'not about one site'} · ${t.message_count} message${Number(t.message_count) === 1 ? '' : 's'} · updated ${time(t.updated_at)}</span></li>`)}</ul>`
-                : html`<p class="muted">No tickets yet. <a href="/tickets/new">Open one</a> if a site did not answer your question.</p>`}
+                : raw(kit.empty({ icon: 'mail', title: 'No tickets yet', text: 'A ticket is one conversation with support. Open one if a site did not answer your question.', action: { href: '/tickets/new', label: 'Open a ticket', icon: 'plus' } }))}
 ${out.next ? html`<p><a href="/tickets?before=${out.next}">Older tickets</a></p>` : ''}`,
         });
     });
