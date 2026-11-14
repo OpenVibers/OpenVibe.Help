@@ -452,7 +452,7 @@ ${problem ? notice(problem, 'warn') : ''}
             body: html`<h1>Open a ticket</h1>${ticketPromise(replies)}${signInPrompt('A ticket belongs to your OpenVibe account, so you can see and answer it later.', back)}`,
         }, 401);
         page(req, res, {
-            title: 'Open a ticket', styles: ['kit.css'], scripts: ['site-picker.js'],
+            title: 'Open a ticket', styles: ['kit.css'], css: ['css/site-picker.css'], scripts: ['site-picker.js'],
             description: 'Tell OpenVibe support what happened; the ticket stays one conversation.',
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
             body: html`<h1>Open a ticket</h1>
@@ -470,7 +470,7 @@ ${ticketForm({ values: pre })}`,
         const b = req.body || {};
         const check = tickets.validateNew({ site: b.site, subject: b.subject, message: b.message, pageUrl: b.page_url }, { sites: new Set(catalog.sites.map((x) => x.id)) });
         if (!check.ok) return page(req, res, {
-            title: 'Open a ticket', styles: ['kit.css'], scripts: ['site-picker.js'], crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
+            title: 'Open a ticket', styles: ['kit.css'], css: ['css/site-picker.css'], scripts: ['site-picker.js'], crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
             body: html`<h1>Open a ticket</h1>${ticketForm({ values: { site: b.site, subject: b.subject, message: b.message, pageUrl: b.page_url }, problem: check.detail })}`,
         }, 422);
         const row = await store.create(s, {

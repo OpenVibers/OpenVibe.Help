@@ -69,57 +69,6 @@ mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; 
 .field input[type="text"], .field select, .field textarea, .reply-form textarea { width: 100%; padding: 9px 11px; font: inherit; color: inherit; background: var(--bg-secondary, #0f1729); border: 1px solid var(--border, #1f2d47); border-radius: 8px; resize: vertical; }
 .field select { max-width: 32rem; }
 
-/* ── The site picker (2026-11-14) ─────────────────────────────────────────────────────────────
-   One sheet for "Which site is this about?": every row is the shared app icon (the menu's own, drawn server-side
-   from openvibe-shared/ov-icons), the site's one name style and the domain under it in small muted text. The search
-   sits outside the scrolling list so it stays at the top; the field shows the picked site's icon and name. The
-   summary, the sheet and the radios work without JavaScript — site-picker.js adds the search and the live field. */
-.site-pick { position: relative; max-width: 32rem; }
-.site-pick > summary { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px; border: 1px solid var(--border, #1f2d47); border-radius: 10px; background: var(--bg-secondary, #0f1729); cursor: pointer; list-style: none; }
-.site-pick > summary::-webkit-details-marker { display: none; }
-.site-pick > summary::marker { content: ''; }
-.site-pick[open] > summary { border-color: var(--accent, #3b82f6); }
-.site-pick-current { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
-.site-pick-current-icon { flex: none; display: inline-flex; width: 32px; height: 32px; }
-.site-pick-current-icon:empty { border: 1px dashed var(--border-light, #2c3d5c); border-radius: 10px; }
-.site-pick-current-text { display: grid; min-width: 0; line-height: 1.25; }
-.site-pick-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.site-pick-domain { font-size: .78rem; font-weight: 400; color: var(--text-muted, #7386a3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.site-pick-chev { flex: none; display: inline-flex; color: var(--text-muted, #7386a3); transition: transform .15s; }
-.site-pick[open] .site-pick-chev { transform: rotate(180deg); }
-.site-pick-panel { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px); display: flex; flex-direction: column; max-height: min(68vh, 460px); overflow: hidden; border: 1px solid var(--border-light, #2c3d5c); border-radius: 14px; background: var(--bg-elevated, var(--bg-card, #131c2e)); box-shadow: 0 18px 40px rgba(0, 0, 0, .45); }
-.site-pick-search { flex: none; padding: 10px; border-bottom: 1px solid var(--border, #1f2d47); background: var(--bg-elevated, var(--bg-card, #131c2e)); }
-.site-pick-search input { width: 100%; min-height: 44px; padding: 9px 12px; font: inherit; color: inherit; background: var(--bg-secondary, #0f1729); border: 1px solid var(--border, #1f2d47); border-radius: 9px; }
-.site-pick-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 6px; }
-.site-pick-row, .site-pick-none { position: relative; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 8px; border-radius: 10px; cursor: pointer; }
-.site-pick-row > input, .site-pick-none > input { position: absolute; width: 1px; height: 1px; margin: -1px; opacity: 0; pointer-events: none; }
-.site-pick-row:has(input:checked), .site-pick-none:has(input:checked) { background: color-mix(in srgb, var(--accent, #3b82f6) 15%, transparent); }
-.site-pick-row:has(input:focus-visible), .site-pick-none:has(input:focus-visible) { outline: 3px solid var(--accent, #3b82f6); outline-offset: -3px; }
-@media (hover: hover) {
-  .site-pick-row:hover, .site-pick-none:hover { background: color-mix(in srgb, var(--text-primary, #e6edf7) 6%, transparent); }
-}
-.site-pick-row[hidden] { display: none; }
-.site-pick-text { flex: 1; display: grid; gap: 1px; min-width: 0; line-height: 1.25; }
-.site-pick-text .site-pick-name, .site-pick-text .site-pick-domain { white-space: normal; overflow-wrap: anywhere; }
-.site-pick-check { flex: none; display: inline-flex; color: var(--accent-light, #60a5fa); opacity: 0; }
-.site-pick-row > input:checked ~ .site-pick-check, .site-pick-none > input:checked ~ .site-pick-check { opacity: 1; }
-.site-pick-empty { margin: 0; padding: 3px 14px 16px; color: var(--text-muted, #7386a3); }
-.site-pick-empty[hidden] { display: none; }
-.site-pick-foot { flex: none; padding: 6px; border-top: 1px solid var(--border, #1f2d47); }
-.site-pick-none { color: var(--text-secondary, #96a7c2); }
-.site-pick-none-icon { flex: none; display: inline-grid; place-items: center; width: 32px; height: 32px; border: 1px dashed var(--border-light, #2c3d5c); border-radius: 10px; color: var(--text-muted, #7386a3); }
-.site-pick-none > input:checked ~ .site-pick-none-icon { border-style: solid; border-color: var(--text-muted, #7386a3); }
-.site-pick-none-text { flex: 1; font-weight: 500; }
-/* Phones: the sheet opens in the page's own flow rather than over the fixed app bar at the bottom of the screen.
-   The search still holds the top of the sheet while its list scrolls, and the summary above stays tappable. */
-@media (max-width: 599px) { .site-pick-panel { position: static; margin-top: 6px; max-height: min(56vh, 400px); } }
-
-/* The shared app icon tile (openvibe-shared/ov-icons APP_CSS): our icons are whole before any script runs. */
-.ov-appicon { --ova-h: 215; --ova-size: 56px; position: relative; display: inline-block; flex: none; width: var(--ova-size); height: var(--ova-size); border-radius: 30%; overflow: hidden; vertical-align: middle; background: linear-gradient(150deg, hsl(var(--ova-h) 72% 58% / .36), hsl(var(--ova-h) 70% 38% / .2)); box-shadow: inset 0 0 0 1px hsl(var(--ova-h) 70% 64% / .3); }
-.ov-appicon > .ov-icon { position: absolute; inset: 0; width: 100%; height: 100%; display: block; --ovi-glyph: hsl(var(--ova-h) 92% 84%); color: hsl(var(--ova-h) 92% 84%); }
-.ov-appicon > .ov-icon svg { position: absolute; left: -13%; top: -13%; width: 126%; height: 126%; margin: 0; transform: none !important; }
-.ov-appicon .ovi-ring, .ov-appicon .ovi-bg, .ov-appicon .ovi-comet, .ov-appicon .ovi-prog { display: none; }
-:root[data-theme="light"] .ov-appicon > .ov-icon { --ovi-glyph: hsl(var(--ova-h) 70% 30%); color: hsl(var(--ova-h) 70% 30%); }
 .filters { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; }
 .ticket-list li span { display: block; }
 .conversation { display: flex; flex-direction: column; gap: 10px; }

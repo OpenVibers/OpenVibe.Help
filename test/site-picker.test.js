@@ -58,6 +58,14 @@ const BLOCK = ['https://openvibe.network/*', 'https://openvibe.chat/*', 'https:/
             const asset = await t.get('/site-picker.js');
             assert.strictEqual(asset.status, 200);
             assert.match(String(asset.headers.get('content-type')), /javascript/, 'the picker script is served with the wrong type');
+            // The picker's styles ride with the form, not with every page's app.css.
+            assert.ok(form.text.includes('/css/site-picker.css?v='), 'the form does not load the picker stylesheet');
+            const stylesheet = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'site-picker.css'), 'utf8');
+            assert.match(stylesheet, /\.site-pick-row[^}]*min-height:\s*52px/, 'the rows are not 52 px tall');
+            assert.match(stylesheet, /\.ov-appicon[^}]*border-radius:\s*30%/, 'the app icon is not the shared rounded tile');
+            const style = await t.get('/css/site-picker.css');
+            assert.strictEqual(style.status, 200);
+            assert.match(String(style.headers.get('content-type')), /css/, 'the picker stylesheet is served with the wrong type');
 
             browser = await harness.launch();
             const context = await browser.newContext();
