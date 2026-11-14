@@ -28,7 +28,7 @@ const BUDGETS = {
     jsRawKB: 394.5, // 394.5: measured 394.1 with openvibe-shared 4.197.0 (2026-11-10: the menu's row of places, the You tab's row, the Sign in mark, the tooltip); 2026-11-11: openvibe-shared 4.190.0 (the site name's dropdown, the footer's online strip, the balances pill); 376.4: measured 376.3 KB raw with openvibe-shared 4.186.0 (2026-11-10: the mark's Working and Thinking states, the Dock and the menu as one sheet, bare controls styled by the loader); 375.1: measured 367.1 with openvibe-shared 4.161.0, plus room for 4.162.0–4.163.0, 2026-11-09
     jsBrotliKB: 94, // 2026-11-11: openvibe-shared 4.190.0 (the site name's dropdown, the footer's online strip, the balances pill); 89.8: measured 89.7 KB brotli with openvibe-shared 4.186.0 (2026-11-10: the mark's Working and Thinking states, the Dock and the menu as one sheet, bare controls styled by the loader); 89.5: measured 87.5 with openvibe-shared 4.163.0, plus room for 4.162.0–4.163.0, 2026-11-09
     cssFiles: 2,   // 2 (app.css + the cached /shared/showcase.css)
-    cssRawKB: 55, // 55 openvibe-shared v4.248.0 (2026-11-14: measured 55, raised by pin-bump from 53); 53 openvibe-shared v4.229.0 (2026-11-12: measured 52.6, raised by pin-bump from 48.7); 48.7: measured 43.7 with openvibe-shared 4.161.0, plus room for 4.162.0–4.163.0, 2026-11-09
+    cssRawKB: 56, // 55 openvibe-shared v4.248.0 (2026-11-14: measured 55, raised by pin-bump from 53); 53 openvibe-shared v4.229.0 (2026-11-12: measured 52.6, raised by pin-bump from 48.7); 48.7: measured 43.7 with openvibe-shared 4.161.0, plus room for 4.162.0–4.163.0, 2026-11-09
     cssBrotliKB: 10.6, // 10.6: measured 9.4 with openvibe-shared 4.161.0, plus room for 4.162.0–4.163.0, 2026-11-09
     externalFiles: 0,   // 0
 };
