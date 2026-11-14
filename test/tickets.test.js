@@ -173,11 +173,26 @@ const SUBJECT = 'Nothing happens when I press Go Live';
     await check('the page form opens a ticket and lands on it; a cross-site form does not', async () => {
         const form = await t.get('/tickets/new', { as: kim });
         assert.strictEqual(form.status, 200);
-        assert.ok(form.text.includes('<select id="site" name="site"'), 'no site picker');
+        assert.ok(form.text.includes('class="site-pick"'), 'no site picker');
+        assert.ok(form.text.includes('id="site-search"'), 'the picker has no search box');
         assert.ok(form.text.includes('class="ovk-btn ovk-btn--primary" type="submit"'), 'the submit is not the primary button');
         assert.ok(form.text.includes('>Open the ticket</span></button>'), 'the submit has no label');
         assert.match(form.text, /\/shared\/kit\.css\?v=/, 'the primary button has no stylesheet');
-        for (const site of t.ctx.catalog.sites.slice(0, 5)) assert.ok(form.text.includes(`value="${site.id}"`), `${site.id} is not in the picker`);
+        // Every row is drawn the same way: the shared app icon, OpenVibe.<Name> (OpenRestream as itself) and the
+        // domain under it; the domain and the name both answer the search.
+        const rowBodies = form.text.split('<label class="site-pick-row"').slice(1).map((s) => s.split('</label>')[0]);
+        assert.strictEqual(rowBodies.length, t.ctx.catalog.sites.length, 'a catalog site is missing from the picker');
+        for (const body of rowBodies) {
+            assert.match(body, /class="ov-appicon"[^>]*>/, 'a row has no app icon');
+            assert.match(body, /class="site-pick-name">(?:OpenVibe\.[^<]+|OpenRestream)</, 'a row does not use the OpenVibe.<Name> style');
+            assert.match(body, /class="site-pick-domain">[a-z0-9.-]+</, 'a row has no domain under the name');
+        }
+        for (const site of t.ctx.catalog.sites) {
+            assert.ok(form.text.includes(`data-site="${site.id}"`), `${site.id} is not in the picker`);
+            assert.ok(form.text.includes(`data-search="${`${site.fullName} ${site.shortName} ${site.id}`.toLowerCase()}"`), `${site.id} cannot be found by name and domain`);
+        }
+        assert.match(form.text, /class="site-pick-name">OpenVibe\.Locker</, 'a short manifest name is not shown as OpenVibe.<Name>');
+        assert.match(form.text, /class="site-pick-name">OpenRestream</, 'OpenRestream is not shown as itself');
         const made = await t.get('/tickets', { as: kim, form: { site: 'openvibe.wiki', subject: 'A wiki question', message: 'How do I cite a source?', page_url: '' }, headers: SAME });
         assert.strictEqual(made.status, 303, made.text.slice(0, 200));
         assert.match(made.headers.get('location'), /^\/tickets\/tkt_/);
@@ -187,17 +202,20 @@ const SUBJECT = 'Nothing happens when I press Go Live';
         assert.strictEqual(cross.status, 403);
         const bad = await t.get('/tickets', { as: kim, form: { subject: '', message: '' }, headers: SAME });
         assert.strictEqual(bad.status, 422);
-        assert.ok(bad.text.includes('<select id="site" name="site"'), 'the form is not shown again');
+        assert.ok(bad.text.includes('class="site-pick"'), 'the form is not shown again');
     });
 
     await check('"Report a problem" from a site\'s footer starts the form with that site and page; anything else is left blank', async () => {
         const page = 'https://openvibe.live/@kim?tab=vods';
         const form = await t.get(`/tickets/new?${new URLSearchParams({ site: 'www.openvibe.live', page })}`, { as: kim });
         assert.strictEqual(form.status, 200);
-        assert.ok(form.text.includes('<option value="openvibe.live" selected>'), 'the site is not chosen');
+        assert.ok(form.text.includes('value="openvibe.live" checked'), 'the site is not chosen');
+        assert.match(form.text, /data-site-name>OpenVibe\.Live</, 'the chosen site is not in the field');
+        assert.ok(form.text.includes('name="site" value=""'), 'the none option is missing');
         assert.ok(form.text.includes(`value="${page.replace('&', '&amp;')}"`) || form.text.includes(`value="${page}"`), 'the page is not filled in');
         const odd = await t.get(`/tickets/new?${new URLSearchParams({ site: 'evil.example', page: 'javascript:alert(1)' })}`, { as: kim });
-        assert.ok(!odd.text.includes(' selected>') || !odd.text.includes('evil.example'), 'an unknown site is chosen');
+        assert.ok(!odd.text.includes('name="site" value="evil.example"'), 'an unknown site is chosen');
+        assert.ok(odd.text.includes('name="site" value="" checked'), 'an unknown site does not fall back to no site');
         assert.ok(!odd.text.includes('javascript:alert'), 'a non-http page is filled in');
         const long = await t.get(`/tickets/new?${new URLSearchParams({ page: `https://openvibe.live/${'x'.repeat(600)}` })}`, { as: kim });
         assert.ok(long.text.includes('name="page_url" type="text" maxlength="500" value=""'), 'a page over 500 characters is filled in');
