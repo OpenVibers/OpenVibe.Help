@@ -53,6 +53,8 @@
 
     function close() {
         picker.open = false;
+        // The next open starts from the whole list, never from the search that picked this site.
+        if (search) { search.value = ''; filter(); }
         if (summary) summary.focus();
     }
 

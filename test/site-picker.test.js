@@ -110,6 +110,8 @@ const BLOCK = ['https://openvibe.network/*', 'https://openvibe.chat/*', 'https:/
                 checked: document.querySelector('.site-pick-row input:checked')?.value,
             }))()`);
             assert.deepStrictEqual(picked, { open: false, name: 'OpenVibe.Locker', domain: 'openvibe.locker', icon: 'lock', checked: 'openvibe.locker' });
+            await page.evaluate(`document.querySelector('.site-pick-summary').click(); true`);
+            assert.strictEqual(await page.evaluate(`document.querySelectorAll('.site-pick-row:not([hidden])').length`), t.ctx.catalog.sites.length, 'the old search survived a pick');
         });
     } finally {
         if (browser) await browser.close();
