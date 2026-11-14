@@ -14,6 +14,7 @@ const ovServe = require('openvibe-shared/serve');
 const frame = require('openvibe-shared/frame');
 const showcase = require('openvibe-shared/showcase');
 const kit = require('openvibe-shared/kit');
+const icons = require('openvibe-shared/ov-icons');
 const seo = require('openvibe-shared/seo');
 const cache = require('openvibe-shared/cache-policy');
 const { asyncRouter } = require('./router');
@@ -385,19 +386,45 @@ ${notice(problem && problem.detail ? problem.detail : 'You are over the limit fo
         };
     };
 
-    /** The site picker: every catalog site, live ones first (the catalog is already in that order). */
-    function siteSelect(selected = '') {
-        const group = (state, label) => {
-            const list = catalog.sites.filter((x) => x.state === state);
-            if (!list.length) return '';
-            return html`<optgroup label="${label}">${list.map((x) => html`<option value="${x.id}"${x.id === selected ? raw(' selected') : ''}>${x.name}${x.live ? '' : ' (coming)'}</option>`)}</optgroup>`;
-        };
-        return html`<select id="site" name="site"><option value="">Not about one site</option>${group('live', 'Live')}${group('coming', 'Coming')}</select>`;
+    // Static drawings for the picker, server-rendered with the rest of the page: the chevron, the picked check and
+    // the dash tile of "Not about one site". They are not Font Awesome and need no script.
+    const CHEVRON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M6 9.5l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const CHECK = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const DASH = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M6 12h12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+
+    /**
+     * The site picker: one sheet of every catalog site, sorted by its one name style ("OpenVibe.Locker",
+     * "OpenRestream"), each row the shared app icon the menu draws, that name and the domain under it in small muted
+     * text. The picked row carries a check and the field above shows the same icon and name. The search is outside
+     * the scrolling list, so it stays at the top; without JavaScript the sheet and its radios still work.
+     */
+    function sitePicker(selected = '') {
+        const chosen = catalog.byId.get(selected) || null;
+        const ordered = [...catalog.sites].sort((a, b) => a.fullName.localeCompare(b.fullName));
+        const row = (x) => html`<label class="site-pick-row" data-site="${x.id}" data-search="${`${x.fullName} ${x.shortName} ${x.id}`.toLowerCase()}">
+<input type="radio" name="site" value="${x.id}"${chosen && chosen.id === x.id ? raw(' checked') : ''}>
+${raw(icons.appHtml(x.appIcon, { size: 32 }))}
+<span class="site-pick-text"><span class="site-pick-name">${x.fullName}</span><span class="site-pick-domain">${x.id}</span></span>
+<span class="site-pick-check" aria-hidden="true">${raw(CHECK)}</span>
+</label>`;
+        return html`<details class="site-pick" aria-labelledby="site-label">
+<summary class="site-pick-summary">
+<span class="site-pick-current"><span class="site-pick-current-icon">${chosen ? raw(icons.appHtml(chosen.appIcon, { size: 32 })) : ''}</span>
+<span class="site-pick-current-text"><span class="site-pick-name" data-site-name>${chosen ? chosen.fullName : 'Not about one site'}</span><span class="site-pick-domain" data-site-domain${chosen ? '' : raw(' hidden')}>${chosen ? chosen.id : ''}</span></span></span>
+<span class="site-pick-chev" aria-hidden="true">${raw(CHEVRON)}</span>
+</summary>
+<div class="site-pick-panel">
+<div class="site-pick-search"><label class="sr-only" for="site-search">Search sites by name or domain</label><input id="site-search" type="search" placeholder="Search by name or domain" autocomplete="off" spellcheck="false" aria-controls="site-pick-list"></div>
+<div class="site-pick-list" id="site-pick-list">${ordered.map(row)}</div>
+<p class="site-pick-empty" id="site-pick-empty" hidden>No site matches that search.</p>
+<div class="site-pick-foot"><label class="site-pick-none"><input type="radio" name="site" value=""${chosen ? '' : raw(' checked')}><span class="site-pick-none-icon" aria-hidden="true">${raw(DASH)}</span><span class="site-pick-none-text">Not about one site</span><span class="site-pick-check" aria-hidden="true">${raw(CHECK)}</span></label></div>
+</div>
+</details>`;
     }
 
     const ticketForm = ({ values = {}, problem = null } = {}) => html`<form class="card ticket-form" method="post" action="/tickets">
 ${problem ? notice(problem, 'warn') : ''}
-<div class="field"><label for="site">Which site is this about?</label>${siteSelect(values.site || '')}
+<div class="field"><span class="field-label" id="site-label">Which site is this about?</span>${sitePicker(values.site || '')}
 <p class="small muted">Optional. Pick the OpenVibe site you were using, if it was one.</p></div>
 <div class="field"><label for="subject">Subject</label><input id="subject" name="subject" type="text" maxlength="${tickets.LIMITS.subject}" required value="${values.subject || ''}"></div>
 <div class="field"><label for="message">What happened?</label><textarea id="message" name="message" rows="8" maxlength="${tickets.LIMITS.body}" required placeholder="What you did, what you expected, what happened instead.">${values.message || ''}</textarea>
@@ -425,7 +452,7 @@ ${problem ? notice(problem, 'warn') : ''}
             body: html`<h1>Open a ticket</h1>${ticketPromise(replies)}${signInPrompt('A ticket belongs to your OpenVibe account, so you can see and answer it later.', back)}`,
         }, 401);
         page(req, res, {
-            title: 'Open a ticket', styles: ['kit.css'],
+            title: 'Open a ticket', styles: ['kit.css'], css: ['css/site-picker.css'], scripts: ['site-picker.js'],
             description: 'Tell OpenVibe support what happened; the ticket stays one conversation.',
             crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
             body: html`<h1>Open a ticket</h1>
@@ -443,7 +470,7 @@ ${ticketForm({ values: pre })}`,
         const b = req.body || {};
         const check = tickets.validateNew({ site: b.site, subject: b.subject, message: b.message, pageUrl: b.page_url }, { sites: new Set(catalog.sites.map((x) => x.id)) });
         if (!check.ok) return page(req, res, {
-            title: 'Open a ticket', styles: ['kit.css'], crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
+            title: 'Open a ticket', styles: ['kit.css'], css: ['css/site-picker.css'], scripts: ['site-picker.js'], crumbs: [{ label: 'Home', href: '/' }, { label: 'Your tickets', href: '/tickets' }, { label: 'New' }],
             body: html`<h1>Open a ticket</h1>${ticketForm({ values: { site: b.site, subject: b.subject, message: b.message, pageUrl: b.page_url }, problem: check.detail })}`,
         }, 422);
         const row = await store.create(s, {

@@ -55,6 +55,27 @@ function shortSiteName(name) {
     return first.length <= 3 ? first.toUpperCase() : first.charAt(0).toUpperCase() + first.slice(1);
 }
 
+/**
+ * A site's name as the menu spells it: OpenVibe.<name>, except a brand that already starts with Open (OpenRestream).
+ * A manifest that names "OpenVibe.Actor" is not prefixed twice, and every row of a list reads the same way.
+ */
+function fullSiteName(name) {
+    const s = String(name || '').replace(/^OpenVibe\./, '');
+    return /^Open[A-Z]/.test(s) ? s : `OpenVibe.${s}`;
+}
+
+// The site icon the shared app icon (and the menu) draws. Network's menu has always drawn OpenVibe.Video with the
+// video glyph, while the service manifest calls it media-hub; everything else is the service's own icon name.
+const APP_ICON_ALIAS = { 'media-hub': 'video' };
+/** A site's app-icon name: its service manifest's site.icon, else the domain's own label (a product with no service). */
+function appIconOf(entry) {
+    const service = entry.service && contracts.services.get(entry.service);
+    const icon = service && service.site && service.site.icon;
+    if (icon) return APP_ICON_ALIAS[icon] || icon;
+    const labels = String(entry.domain || '').split('.');
+    return labels[0] === 'openvibe' && labels[1] ? labels[1] : labels[0];
+}
+
 /** The host a service manifest's site is served on (products.siteDomain keeps one rule for both homes). */
 const siteDomain = contracts.products.siteDomain;
 
@@ -195,6 +216,10 @@ function buildSites() {
             id: e.domain,
             // "OpenVibe.Actor" in a list of OpenVibe sites reads as "Actor"; ai.openvibe.services reads as "AI".
             shortName: shortSiteName(e.name || e.domain),
+            // The one name style of a list: "OpenVibe.Locker", "OpenVibe.Actor", and "OpenRestream" as itself.
+            fullName: fullSiteName(e.name || e.domain),
+            // The shared app icon the menu draws for this site (openvibe-shared/ov-icons, server-side).
+            appIcon: appIconOf(e),
             state,
             live: state === 'live',
             // A product manifest has no `what` of its own: its tagline is the one line, or the description's first sentence.

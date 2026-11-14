@@ -65,9 +65,10 @@ mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; 
 .ticket-submit { margin: 16px 0 4px; }
 .ticket-submit .ovk-btn { width: 100%; }
 @media (min-width: 600px) { .ticket-submit .ovk-btn { width: auto; min-width: 14rem; } }
-.field label, .reply-form label { display: block; font-weight: 600; margin-bottom: 4px; }
+.field > label, .field > .field-label, .reply-form label { display: block; font-weight: 600; margin-bottom: 4px; }
 .field input[type="text"], .field select, .field textarea, .reply-form textarea { width: 100%; padding: 9px 11px; font: inherit; color: inherit; background: var(--bg-secondary, #0f1729); border: 1px solid var(--border, #1f2d47); border-radius: 8px; resize: vertical; }
 .field select { max-width: 32rem; }
+
 .filters { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; }
 .ticket-list li span { display: block; }
 .conversation { display: flex; flex-direction: column; gap: 10px; }

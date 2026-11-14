@@ -3,7 +3,8 @@
 /**
  * Page shell. Every page is server-rendered through openvibe-shared/shell and is complete without JavaScript:
  *   - <head>: title, description, canonical, robots (pages are noindex unless they say otherwise), Open Graph/Twitter,
- *     JSON-LD (openvibe-shared/seo), plus this service's extras: the shared app icon, the stylesheet, the boost marker
+ *     JSON-LD (openvibe-shared/seo), plus this service's extras: the shared app icon, the stylesheet, a page's own
+ *     extra stylesheets (`css`, paths under public/), the boost marker
  *   - the OpenVibe Frame: theme-loader, web-runtime, navbar and footer scripts (the shell boots the
  *     navbar; the footer is initialised below), a <noscript> navigation bar and the server-rendered footer
  *   - the product's own script only where a page offers an in-browser convenience
@@ -99,6 +100,7 @@ function renderPage(o) {
         head: `<meta name="referrer" content="${o.noReferrer ? 'no-referrer' : 'strict-origin-when-cross-origin'}">
 ${appIcon.headTags({ site: 'help' })}
 <link rel="stylesheet" href="${asset('css/app.css')}">
+${(o.css || []).map((rel) => `<link rel="stylesheet" href="${asset(rel)}">`).join('\n')}
 <!-- The shared showcase stylesheet on every page, not only the home: inner pages use its buttons (sc-btn), and without it a sign-in button drew as a bare link (phone sweep, 2026-11-01). It is scoped to its own sc- classes. -->
 ${[...new Set(['showcase.css', ...(o.styles || [])])].map((name) => `<link rel="stylesheet" href="${esc(ovServe.url(name))}">`).join('\n')}
 ${(o.inlineStyles || []).map((css) => `<style>${css}</style>`).join('\n')}
