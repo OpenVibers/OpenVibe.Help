@@ -173,7 +173,7 @@ ${ticketPromise(replies)}
 <p class="sc-lede">One box over every site's answers, and over the whole OpenVibe network.</p>
 ${searchForm()}</section>
 <section class="sc-sec" id="sites" aria-labelledby="h-sites"><h2 id="h-sites">Browse by site</h2>
-<p class="sc-lede">Live sites first; each name opens that site's page, with its own words and its own questions. <a href="/sites">The full list, with what each one is</a>.</p>
+<p class="sc-lede">Live sites first; each name opens that site's page, with its own words and its own questions.</p>
 <p class="small muted">${NO_PROMOTED}</p>
 <ul class="site-cards">${catalog.sites.map((x) => html`<li><a class="site-card${x.live ? '' : ' coming'}" href="/sites/${x.id}"><span class="site-card-top"><b>${x.shortName}</b><span class="site-state">${x.live ? 'live' : 'coming'}</span></span><span class="site-card-line">${x.oneLine}</span>${answersBySite.get(x.domain) ? html`<span class="site-card-count">${String(answersBySite.get(x.domain))} ${answersBySite.get(x.domain) === 1 ? 'answer' : 'answers'}</span>` : ''}</a></li>`)}</ul>
 <p class="small"><a href="/sites">All ${catalog.sites.length} sites, with what each one is</a></p></section>

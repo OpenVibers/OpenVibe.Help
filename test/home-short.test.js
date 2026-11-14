@@ -41,6 +41,13 @@ const { boot, check, done } = require('./helpers/boot');
             assert.match(css, /\.hp-fold-block > summary \{ display: block; list-style: none; padding: 0; \}/, 'the summary marker is gone');
             assert.match(css, /\.hp-fold-block > summary::marker \{ content: ''; \}/, 'the standard marker is empty');
             assert.match(css, /\.hp-fold-block > summary::-webkit-details-marker \{ display: none; \}/, 'the WebKit marker is hidden');
+            // On a phone a closed fold is Shared's fold row: a card, the title and count on one line, and a chevron
+            // (the 11-14 review: a heading with a count under it and nothing else read as an empty section).
+            const phone = css.slice(css.indexOf('@media (max-width: 640px) {\n  /* On a phone a fold'));
+            assert.match(phone, /\.hp-fold-block \{ margin-top: 24px; border: 1px solid/, 'a phone fold is a card');
+            assert.match(phone, /\.hp-fold-block > summary \{ display: flex; align-items: center; justify-content: space-between;[^}]*min-height: 56px/, 'its title and count share one row, a full tap target');
+            assert.match(phone, /\.hp-fold-block > summary::after \{ content: '';[^}]*rotate\(45deg\)/, 'with a chevron');
+            assert.match(phone, /\.hp-fold-block\[open\] > summary::after \{ transform: rotate\(-135deg\)/, 'that turns when it opens');
         });
 
         await check('the parts a reader rarely needs are folds, open in the page and closed on a phone', async () => {
