@@ -150,9 +150,16 @@ mark { background: var(--warning, #f59e0b); color: #10151f; border-radius: 3px; 
   .hp-fold-block .sc-sec { margin: 0; padding: 0; }
 }
 @media (max-width: 640px) {
-  .hp-fold-block { margin-top: 24px; }
-  .hp-fold-block > summary { cursor: pointer; }
-  .hp-fold-hint { display: inline; margin-left: 8px; font-size: .78rem; font-weight: 600; color: var(--text-secondary, #96a7c2); }
+  /* On a phone a fold is Shared's fold row (.sc-fold): a card with its title, its count and a chevron, so a closed one
+     reads as something to open, not as a heading over nothing (the 11-14 review, plan §AB.49). */
+  .hp-fold-block { margin-top: 24px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 16px; background: var(--bg-secondary, #101828); }
+  .hp-fold-block > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 0 48px 0 18px; cursor: pointer; position: relative; }
+  .hp-fold-block > summary::after { content: ''; position: absolute; right: 22px; top: 50%; width: 8px; height: 8px; margin-top: -6px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform var(--ov-dur-2, .2s); opacity: .7; }
+  .hp-fold-block[open] > summary::after { transform: rotate(-135deg); margin-top: -2px; }
+  .hp-fold-block > summary:focus-visible { outline: 2px solid var(--accent, #3b82f6); outline-offset: -2px; border-radius: 16px; }
+  .hp-fold-block > summary h2 { font-size: 18px; }
+  .hp-fold-hint { display: inline; margin: 0; font-size: 14px; font-weight: 600; color: var(--text-muted, #7386a3); text-align: right; white-space: nowrap; }
+  .hp-fold-block > .sc-sec { margin: 0; padding: 0 18px 18px; }
 }
 
 /* A sign-in prompt: the sentence, then the button under it (2026-11-01). */
