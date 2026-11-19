@@ -8,11 +8,11 @@
   "port": "5020",
   "domain": "openvibe.help",
   "contracts": "openvibe-contracts v0.443.0",
-  "sdk": "openvibe-sdk v0.177.0",
+  "sdk": "openvibe-sdk v0.188.0",
   "shared": "openvibe-shared v4.320.0",
   "packages": [
     "openvibe-contracts v0.443.0",
-    "openvibe-sdk v0.177.0",
+    "openvibe-sdk v0.188.0",
     "openvibe-shared v4.320.0",
     "openvibe-publishing v1.7.0"
   ],
@@ -55,5 +55,5 @@
     "deploy files"
   ],
   "deployment": "openvibe-ovh: unit openvibe-help.service on 127.0.0.1:5020 (git checkout /opt/openvibe.help, env /etc/openvibe/help.env, database ov_help), deployed with `sudo ovhost deploy help`; public at https://openvibe.help since 2026-10-08.",
-  "updated": "2026-11-18"
+  "updated": "2026-11-19"
 }
